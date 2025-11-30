@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CourseIcon } from "@/components/ui/course-icon";
 import { Logo } from "@/components/ui/logo";
+import { LinkBridgeLogo } from "@/components/ui/linkbridge-logo";
 import {
   Code2,
   Play,
@@ -72,7 +73,13 @@ export default function Landing() {
       {/* Navigation */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
         <div className="container flex h-14 items-center justify-between">
-          <Logo />
+          <div className="flex items-center gap-3">
+            <Logo />
+            <div className="hidden sm:flex items-center gap-1.5">
+              <span className="text-[10px] text-muted-foreground">Powered by</span>
+              <LinkBridgeLogo size="sm" />
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <SignedOut>
               <SignInButton mode="modal">
@@ -285,14 +292,8 @@ export default function Landing() {
               © {new Date().getFullYear()} CodeMaster. All rights reserved.
             </p>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-muted-foreground">
-                Designed with 💻 by Mike Waitindi
-              </p>
-              <img 
-                src="/developer.png" 
-                alt="Mike Waitindi" 
-                className="h-8 w-8 rounded-full object-cover border border-border" 
-              />
+              <span className="text-sm text-muted-foreground">Powered by</span>
+              <LinkBridgeLogo size="md" />
             </div>
           </div>
         </div>

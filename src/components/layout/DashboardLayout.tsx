@@ -3,6 +3,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Navbar } from "./Navbar";
+import { Footer } from "./Footer";
 import { TrialBanner } from "@/components/TrialBanner";
 
 interface DashboardLayoutProps {
@@ -25,12 +26,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [isLoaded, user, getOrCreateUser]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="container py-6">
+      <main className="container py-6 flex-1">
         <TrialBanner onUpgrade={() => window.open('/pricing', '_self')} />
         {children}
       </main>
+      <Footer />
     </div>
   );
 }
