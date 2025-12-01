@@ -7,16 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ArrowLeft,
-  Play,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  ChevronRight,
-  BookOpen,
-  Code,
-} from "lucide-react";
+
 import type { Id } from "../../convex/_generated/dataModel";
 import { useTheme } from "@/components/theme-provider";
 
@@ -169,7 +160,7 @@ export default function LessonPlayer() {
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
           <Link to={`/course/javascript`}>
             <Button variant="ghost" size="sm" className="gap-1 md:gap-2 px-2 md:px-3">
-              <ArrowLeft className="h-4 w-4" />
+              <span className="emoji-icon">←</span>
               <span className="hidden sm:inline">Back</span>
             </Button>
           </Link>
@@ -187,14 +178,14 @@ export default function LessonPlayer() {
             size="sm"
             onClick={() => setMobileView("content")}
           >
-            <BookOpen className="h-4 w-4" />
+            <span className="emoji-icon">📖</span>
           </Button>
           <Button
             variant={mobileView === "editor" ? "default" : "outline"}
             size="sm"
             onClick={() => setMobileView("editor")}
           >
-            <Code className="h-4 w-4" />
+            <span className="emoji-icon">💻</span>
           </Button>
         </div>
       </header>
@@ -287,9 +278,9 @@ export default function LessonPlayer() {
                         <CardContent className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             {result.passed ? (
-                              <CheckCircle className="h-5 w-5 text-green-500" />
+                              <span className="emoji-icon text-xl">✅</span>
                             ) : (
-                              <XCircle className="h-5 w-5 text-red-500" />
+                              <span className="emoji-icon text-xl">❌</span>
                             )}
                             <span className="font-medium">
                               Test {index + 1}
@@ -334,9 +325,9 @@ export default function LessonPlayer() {
               className="gap-2"
             >
               {isRunning ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="emoji-icon animate-spin">⏳</span>
               ) : (
-                <Play className="h-4 w-4" />
+                <span className="emoji-icon">▶️</span>
               )}
               Run Code
             </Button>
@@ -346,11 +337,11 @@ export default function LessonPlayer() {
               className="gap-2"
             >
               {isRunning ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="emoji-icon animate-spin">⏳</span>
               ) : (
                 <>
                   Submit & Continue
-                  <ChevronRight className="h-4 w-4" />
+                  <span className="emoji-icon">→</span>
                 </>
               )}
             </Button>

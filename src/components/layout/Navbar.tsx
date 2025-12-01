@@ -15,18 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import { LinkBridgeLogo } from "@/components/ui/linkbridge-logo";
-import {
-  BookOpen,
-  GraduationCap,
-  ClipboardList,
-  Moon,
-  Sun,
-  ChevronDown,
-  Users,
-  LayoutDashboard,
-  Menu,
-  X,
-} from "lucide-react";
+
 import { useTheme } from "@/components/theme-provider";
 
 export function Navbar() {
@@ -37,15 +26,15 @@ export function Navbar() {
   const switchRole = useMutation(api.users.switchRole);
 
   const studentNavItems = [
-    { href: "/dashboard", label: "Dashboard", icon: BookOpen },
-    { href: "/courses", label: "Courses", icon: GraduationCap },
-    { href: "/exams", label: "Exams", icon: ClipboardList },
+    { href: "/dashboard", label: "Dashboard", emoji: "📊" },
+    { href: "/courses", label: "Courses", emoji: "🎓" },
+    { href: "/exams", label: "Exams", emoji: "📝" },
   ];
 
   const teacherNavItems = [
-    { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/courses", label: "Courses", icon: GraduationCap },
-    { href: "/teacher", label: "Students", icon: Users },
+    { href: "/teacher", label: "Dashboard", emoji: "📋" },
+    { href: "/courses", label: "Courses", emoji: "🎓" },
+    { href: "/teacher", label: "Students", emoji: "👥" },
   ];
 
   const navItems = currentUser?.role === "teacher" ? teacherNavItems : studentNavItems;
@@ -68,7 +57,6 @@ export function Navbar() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1 flex-1">
           {navItems.map((item) => {
-            const Icon = item.icon;
             const isActive = location.pathname === item.href;
             return (
               <Link key={item.href + item.label} to={item.href}>
@@ -77,7 +65,7 @@ export function Navbar() {
                   size="sm"
                   className="gap-2"
                 >
-                  <Icon className="h-4 w-4" />
+                  <span className="emoji-icon">{item.emoji}</span>
                   {item.label}
                 </Button>
               </Link>
@@ -93,7 +81,7 @@ export function Navbar() {
           className="md:hidden mr-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
-          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileMenuOpen ? <span className="emoji-icon text-xl">✕</span> : <span className="emoji-icon text-xl">☰</span>}
         </Button>
 
         <div className="flex items-center gap-2">
@@ -107,12 +95,12 @@ export function Navbar() {
                     }
                     className="text-xs"
                   >
-                    {currentUser.role === "teacher" ? "T" : "S"}
+                    {currentUser.role === "teacher" ? "👨‍🏫" : "🎓"}
                     <span className="hidden sm:inline ml-1">
-                      {currentUser.role === "teacher" ? "eacher" : "tudent"}
+                      {currentUser.role === "teacher" ? "Teacher" : "Student"}
                     </span>
                   </Badge>
-                  <ChevronDown className="h-3 w-3" />
+                  <span className="emoji-icon text-xs">▼</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -132,9 +120,9 @@ export function Navbar() {
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           >
             {theme === "dark" ? (
-              <Sun className="h-4 w-4" />
+              <span className="emoji-icon text-lg">☀️</span>
             ) : (
-              <Moon className="h-4 w-4" />
+              <span className="emoji-icon text-lg">🌙</span>
             )}
           </Button>
 
@@ -154,7 +142,6 @@ export function Navbar() {
         <div className="md:hidden border-t border-border bg-background">
           <nav className="container py-3 flex flex-col gap-1">
             {navItems.map((item) => {
-              const Icon = item.icon;
               const isActive = location.pathname === item.href;
               return (
                 <Link
@@ -166,7 +153,7 @@ export function Navbar() {
                     variant={isActive ? "secondary" : "ghost"}
                     className="w-full justify-start gap-2"
                   >
-                    <Icon className="h-4 w-4" />
+                    <span className="emoji-icon">{item.emoji}</span>
                     {item.label}
                   </Button>
                 </Link>

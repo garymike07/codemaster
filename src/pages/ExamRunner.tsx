@@ -6,14 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-} from "lucide-react";
+
 import type { Id } from "../../convex/_generated/dataModel";
 
 export default function ExamRunner() {
@@ -108,9 +101,9 @@ export default function ExamRunner() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             {result.passed ? (
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+              <span className="emoji-icon text-6xl block mb-4">🎉</span>
             ) : (
-              <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <span className="emoji-icon text-6xl block mb-4">😔</span>
             )}
             <CardTitle className="text-2xl">
               {result.passed ? "Congratulations!" : "Better luck next time"}
@@ -182,7 +175,7 @@ export default function ExamRunner() {
               variant={timeLeft && timeLeft < 300 ? "destructive" : "secondary"}
               className="gap-1 text-base px-3 py-1"
             >
-              <Clock className="h-4 w-4" />
+              <span className="emoji-icon">⏱️</span>
               {timeLeft !== null ? formatTime(timeLeft) : "--:--"}
             </Badge>
             <Button onClick={handleSubmit}>Submit Exam</Button>
@@ -257,7 +250,7 @@ export default function ExamRunner() {
                           }`}
                         >
                           {answers[question.id] === option && (
-                            <CheckCircle className="h-4 w-4 text-primary-foreground" />
+                            <span className="emoji-icon text-xs">✓</span>
                           )}
                         </div>
                         <span>{option}</span>
@@ -287,7 +280,7 @@ export default function ExamRunner() {
               disabled={currentQuestion === 0}
               className="gap-2"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <span className="emoji-icon">←</span>
               Previous
             </Button>
             {currentQuestion < exam.questions.length - 1 ? (
@@ -296,7 +289,7 @@ export default function ExamRunner() {
                 className="gap-2"
               >
                 Next
-                <ChevronRight className="h-4 w-4" />
+                <span className="emoji-icon">→</span>
               </Button>
             ) : (
               <Button onClick={handleSubmit} className="gap-2">
@@ -308,7 +301,7 @@ export default function ExamRunner() {
           {/* Warning */}
           {answeredCount < exam.questions.length && (
             <div className="flex items-center gap-2 text-yellow-500 text-sm">
-              <AlertTriangle className="h-4 w-4" />
+              <span className="emoji-icon">⚠️</span>
               You have {exam.questions.length - answeredCount} unanswered
               questions
             </div>

@@ -1,49 +1,50 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 210 20% 98%;
+    --foreground: 220 25% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 220 25% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --popover-foreground: 220 25% 10%;
+    --primary: 190 85% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 15% 93%;
+    --secondary-foreground: 220 25% 10%;
+    --muted: 210 15% 93%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 280 70% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 15% 88%;
+    --input: 210 15% 88%;
+    --ring: 190 85% 45%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --background: 220 25% 6%;
+    --foreground: 210 20% 95%;
+    --card: 220 22% 9%;
+    --card-foreground: 210 20% 95%;
+    --popover: 220 22% 9%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 190 85% 50%;
+    --primary-foreground: 220 25% 6%;
+    --secondary: 220 20% 14%;
+    --secondary-foreground: 210 20% 95%;
+    --muted: 220 20% 14%;
+    --muted-foreground: 215 15% 55%;
+    --accent: 280 70% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 18% 16%;
+    --input: 220 18% 16%;
+    --ring: 190 85% 50%;
   }
 }
 
@@ -53,10 +54,13 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    font-size: 14px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 16px;
     line-height: 1.6;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.011em;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     /* Background Image Configuration */
     background-image: url('/bg.svg');
     background-size: cover;
@@ -65,15 +69,17 @@
     background-repeat: no-repeat;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 500;
-    letter-spacing: -0.02em;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
   }
-  h1 { font-size: 1.75rem; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.25rem; }
-  h4 { font-size: 1.125rem; }
+  h1 { font-size: 3rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
   p, span, a, li, td, th, label, input, textarea, select, button {
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -126,3 +132,114 @@
   font-style: normal;
   vertical-align: middle;
 }
+
+/* Custom Font Families */
+.font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.font-heading {
+  font-family: 'Sora', sans-serif;
+}
+
+.font-sans {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Unique Color Palette */
+.text-coral { color: #ff6b6b; }
+.text-mint { color: #4ecdc4; }
+.text-amber { color: #ffa94d; }
+.text-violet { color: #9775fa; }
+.text-rose { color: #f06595; }
+.text-sky { color: #74c0fc; }
+.text-lime { color: #a9e34b; }
+.text-gold { color: #ffd43b; }
+.text-indigo { color: #5c7cfa; }
+.text-teal { color: #20c997; }
+
+.bg-coral { background-color: #ff6b6b; }
+.bg-mint { background-color: #4ecdc4; }
+.bg-amber { background-color: #ffa94d; }
+.bg-violet { background-color: #9775fa; }
+.bg-rose { background-color: #f06595; }
+.bg-sky { background-color: #74c0fc; }
+.bg-lime { background-color: #a9e34b; }
+.bg-gold { background-color: #ffd43b; }
+.bg-indigo { background-color: #5c7cfa; }
+.bg-teal { background-color: #20c997; }
+
+/* Gradient Text */
+.text-gradient-coral {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa94d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-ocean {
+  background: linear-gradient(135deg, #4ecdc4 0%, #5c7cfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-sunset {
+  background: linear-gradient(135deg, #f06595 0%, #ffd43b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(135deg, #9775fa 0%, #f06595 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-forest {
+  background: linear-gradient(135deg, #20c997 0%, #a9e34b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient Backgrounds */
+.bg-gradient-coral {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa94d 100%);
+}
+
+.bg-gradient-ocean {
+  background: linear-gradient(135deg, #4ecdc4 0%, #5c7cfa 100%);
+}
+
+.bg-gradient-sunset {
+  background: linear-gradient(135deg, #f06595 0%, #ffd43b 100%);
+}
+
+.bg-gradient-purple {
+  background: linear-gradient(135deg, #9775fa 0%, #f06595 100%);
+}
+
+/* Subtle background tints */
+.bg-coral\/10 { background-color: rgba(255, 107, 107, 0.1); }
+.bg-mint\/10 { background-color: rgba(78, 205, 196, 0.1); }
+.bg-amber\/10 { background-color: rgba(255, 169, 77, 0.1); }
+.bg-violet\/10 { background-color: rgba(151, 117, 250, 0.1); }
+.bg-rose\/10 { background-color: rgba(240, 101, 149, 0.1); }
+.bg-sky\/10 { background-color: rgba(116, 192, 252, 0.1); }
+.bg-indigo\/10 { background-color: rgba(92, 124, 250, 0.1); }
+.bg-teal\/10 { background-color: rgba(32, 201, 151, 0.1); }
+
+/* Border colors */
+.border-coral { border-color: #ff6b6b; }
+.border-mint { border-color: #4ecdc4; }
+.border-violet { border-color: #9775fa; }
+.border-rose { border-color: #f06595; }
+.border-indigo { border-color: #5c7cfa; }
+.border-teal { border-color: #20c997; }

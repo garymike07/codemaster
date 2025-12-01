@@ -12,14 +12,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Clock,
-  BookOpen,
-  CheckCircle,
-  Circle,
-  Play,
-  ArrowLeft,
-} from "lucide-react";
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -99,7 +92,7 @@ export default function CourseDetail() {
       {/* Back Button */}
       <Link to="/courses">
         <Button variant="ghost" size="sm" className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
+          <span className="emoji-icon">←</span>
           Back to Courses
         </Button>
       </Link>
@@ -122,11 +115,11 @@ export default function CourseDetail() {
                   {course.difficulty}
                 </Badge>
                 <span className="text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
+                  <span className="emoji-icon">⏱️</span>
                   {course.estimatedHours} hours
                 </span>
                 <span className="text-muted-foreground flex items-center gap-1">
-                  <BookOpen className="h-4 w-4" />
+                  <span className="emoji-icon">📖</span>
                   {course.totalLessons} lessons
                 </span>
               </div>
@@ -158,7 +151,7 @@ export default function CourseDetail() {
                 {nextLesson && (
                   <Link to={`/lesson/${nextLesson._id}`}>
                     <Button className="w-full gap-2">
-                      <Play className="h-4 w-4" />
+                      <span className="emoji-icon">▶️</span>
                       {completedLessonIds.size === 0
                         ? "Start Learning"
                         : "Continue Learning"}
@@ -222,9 +215,9 @@ export default function CourseDetail() {
                             }`}
                           >
                             {isCompleted ? (
-                              <CheckCircle className="h-5 w-5 text-green-500" />
+                              <span className="emoji-icon text-lg">✅</span>
                             ) : (
-                              <Circle className="h-5 w-5 text-muted-foreground" />
+                              <span className="emoji-icon text-lg">⭕</span>
                             )}
                             <span className="text-lg">
                               {

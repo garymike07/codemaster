@@ -5,15 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Clock,
-  FileText,
-  CheckCircle,
-  XCircle,
-  PlayCircle,
-  Trophy,
-  Filter,
-} from "lucide-react";
+
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 type ExamStatus = "not_started" | "in_progress" | "completed" | "";
@@ -34,26 +26,26 @@ export default function ExamCentre() {
       case "completed":
         return passed ? (
           <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-            <CheckCircle className="h-3 w-3 mr-1" />
+            <span className="emoji-icon mr-1">✅</span>
             Passed ({score}%)
           </Badge>
         ) : (
           <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-            <XCircle className="h-3 w-3 mr-1" />
+            <span className="emoji-icon mr-1">❌</span>
             Failed ({score}%)
           </Badge>
         );
       case "in_progress":
         return (
           <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-            <PlayCircle className="h-3 w-3 mr-1" />
+            <span className="emoji-icon mr-1">▶️</span>
             In Progress
           </Badge>
         );
       default:
         return (
           <Badge variant="secondary">
-            <FileText className="h-3 w-3 mr-1" />
+            <span className="emoji-icon mr-1">📄</span>
             Not Started
           </Badge>
         );
@@ -115,7 +107,7 @@ export default function ExamCentre() {
           <CardContent className="pt-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-muted-foreground" />
+                <span className="emoji-icon">🔍</span>
                 <span className="text-sm font-medium">Filter:</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -160,7 +152,7 @@ export default function ExamCentre() {
         ) : filteredExams.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <Trophy className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <span className="emoji-icon text-5xl block mb-4 opacity-50">🏆</span>
               <h3 className="text-lg font-semibold mb-2">No Exams Available</h3>
               <p className="text-muted-foreground">
                 {statusFilter
@@ -190,15 +182,15 @@ export default function ExamCentre() {
                   </p>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
+                      <span className="emoji-icon">⏱️</span>
                       {exam.durationMinutes} min
                     </div>
                     <div className="flex items-center gap-1">
-                      <FileText className="h-4 w-4" />
+                      <span className="emoji-icon">📄</span>
                       {exam.questions.length} questions
                     </div>
                     <div className="flex items-center gap-1">
-                      <Trophy className="h-4 w-4" />
+                      <span className="emoji-icon">🏆</span>
                       {exam.totalPoints} pts
                     </div>
                   </div>

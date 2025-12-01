@@ -9,21 +9,6 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CourseIcon } from "@/components/ui/course-icon";
 import { MessagingPanel } from "@/components/messaging/MessagingPanel";
-import {
-  BookOpen,
-  ArrowRight,
-  Clock,
-  Trophy,
-  MessageSquare,
-  ClipboardList,
-  Play,
-  Flame,
-  Zap,
-  Award,
-  Target,
-  Star,
-  Users,
-} from "lucide-react";
 
 export default function Dashboard() {
   const [showMessaging, setShowMessaging] = useState(false);
@@ -86,16 +71,16 @@ export default function Dashboard() {
           {currentUser?.role === "teacher" && (
             <Link to="/teacher">
               <Button size="sm" className="md:size-default">
-                <Users className="h-4 w-4 mr-2" />
+                <span className="emoji-icon mr-2">👨‍🏫</span>
                 <span className="hidden sm:inline">Teacher </span>Dashboard
               </Button>
             </Link>
           )}
           {courses?.length === 0 && (
-            <Button onClick={handleSeed} size="sm">Seed Sample</Button>
+            <Button onClick={handleSeed} size="sm">🌱 Seed Sample</Button>
           )}
           <Button onClick={handleSeedAll} variant="outline" size="sm">
-            <span className="hidden sm:inline">Seed Full </span>Curriculum
+            <span className="hidden sm:inline">🌱 Seed Full </span>Curriculum
           </Button>
         </div>
       </div>
@@ -105,7 +90,7 @@ export default function Dashboard() {
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <BookOpen className="h-4 w-4" />
+              <span className="emoji-icon">📖</span>
               Continue Learning
             </div>
           </CardHeader>
@@ -138,7 +123,7 @@ export default function Dashboard() {
                 }
               >
                 <Button className="gap-2 w-full sm:w-auto">
-                  <Play className="h-4 w-4" />
+                  <span className="emoji-icon">▶️</span>
                   Resume
                 </Button>
               </Link>
@@ -153,7 +138,7 @@ export default function Dashboard() {
         <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Level & XP</CardTitle>
-            <Zap className="h-4 w-4 text-yellow-500" />
+            <span className="emoji-icon text-lg">⚡</span>
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-2">
@@ -176,7 +161,7 @@ export default function Dashboard() {
         <Card className={streak?.currentStreak && streak.currentStreak > 0 ? "bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Daily Streak</CardTitle>
-            <Flame className={`h-4 w-4 ${streak?.currentStreak && streak.currentStreak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+            <span className="emoji-icon text-lg">🔥</span>
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-2">
@@ -188,7 +173,7 @@ export default function Dashboard() {
             </p>
             {streak?.isActiveToday && (
               <Badge variant="secondary" className="mt-2 text-xs">
-                <Star className="h-3 w-3 mr-1" />
+                <span className="emoji-icon mr-1">⭐</span>
                 Active today
               </Badge>
             )}
@@ -199,7 +184,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lessons Done</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <span className="emoji-icon text-lg">🎯</span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{userStats?.lessonsCompleted ?? stats.completedLessons}</div>
@@ -213,7 +198,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Badges Earned</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
+            <span className="emoji-icon text-lg">🏅</span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{userBadges?.length ?? 0}</div>
@@ -240,7 +225,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium">
               Enrolled Courses
             </CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <span className="emoji-icon text-lg">📚</span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalCourses}</div>
@@ -251,7 +236,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium">
               Exams Passed
             </CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
+            <span className="emoji-icon text-lg">🏆</span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{userStats?.examsPassed ?? 0}</div>
@@ -262,7 +247,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium">
               Average Progress
             </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="emoji-icon text-lg">⏱️</span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.averageProgress}%</div>
@@ -277,7 +262,7 @@ export default function Dashboard() {
           <Link to="/courses">
             <Button variant="ghost" size="sm" className="gap-1">
               View All
-              <ArrowRight className="h-4 w-4" />
+              <span className="emoji-icon">→</span>
             </Button>
           </Link>
         </div>
@@ -325,13 +310,13 @@ export default function Dashboard() {
         ) : (
           <Card>
             <CardContent className="py-12 text-center">
-              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <span className="emoji-icon text-5xl block mb-4">📚</span>
               <h3 className="font-semibold mb-2">No courses yet</h3>
               <p className="text-muted-foreground mb-4">
                 Start your learning journey by enrolling in a course
               </p>
               <Link to="/courses">
-                <Button>Browse Courses</Button>
+                <Button>📖 Browse Courses</Button>
               </Link>
             </CardContent>
           </Card>
@@ -346,7 +331,7 @@ export default function Dashboard() {
             <Link to="/courses">
               <Button variant="ghost" size="sm" className="gap-1">
                 View All ({courses.length})
-                <ArrowRight className="h-4 w-4" />
+                <span className="emoji-icon">→</span>
               </Button>
             </Link>
           </div>
@@ -380,7 +365,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5" />
+              <span className="emoji-icon">📋</span>
               Exam Centre
             </CardTitle>
           </CardHeader>
@@ -390,7 +375,7 @@ export default function Dashboard() {
             </p>
             <Link to="/exam-centre">
               <Button variant="outline" className="w-full">
-                Go to Exam Centre
+                📝 Go to Exam Centre
               </Button>
             </Link>
           </CardContent>
@@ -398,7 +383,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
+              <span className="emoji-icon">💬</span>
               Messages
               {unreadCount && unreadCount > 0 && (
                 <Badge className="ml-auto">{unreadCount}</Badge>
@@ -414,7 +399,7 @@ export default function Dashboard() {
               className="w-full"
               onClick={() => setShowMessaging(true)}
             >
-              Open Messages
+              📨 Open Messages
             </Button>
           </CardContent>
         </Card>

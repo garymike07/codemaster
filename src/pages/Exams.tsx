@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, FileQuestion, CheckCircle, XCircle, Trophy } from "lucide-react";
+
 
 export default function Exams() {
   const exams = useQuery(api.exams.list);
@@ -64,11 +64,11 @@ export default function Exams() {
                     </p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
+                        <span className="emoji-icon">⏱️</span>
                         {exam.durationMinutes} min
                       </span>
                       <span className="flex items-center gap-1">
-                        <Trophy className="h-4 w-4" />
+                        <span className="emoji-icon">🏆</span>
                         Pass: {exam.passingScore}%
                       </span>
                     </div>
@@ -82,7 +82,7 @@ export default function Exams() {
           ) : (
             <Card>
               <CardContent className="py-12 text-center">
-                <FileQuestion className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <span className="emoji-icon text-5xl block mb-4">📋</span>
                 <h3 className="font-semibold mb-2">No exams available</h3>
                 <p className="text-muted-foreground">
                   Check back later for new assessments
@@ -110,7 +110,7 @@ export default function Exams() {
                         )}
                       </div>
                       <Badge variant="success" className="gap-1">
-                        <CheckCircle className="h-3 w-3" />
+                        <span className="emoji-icon">✅</span>
                         Passed
                       </Badge>
                     </div>
@@ -144,7 +144,7 @@ export default function Exams() {
           ) : (
             <Card>
               <CardContent className="py-12 text-center">
-                <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <span className="emoji-icon text-5xl block mb-4">🏆</span>
                 <h3 className="font-semibold mb-2">No completed exams</h3>
                 <p className="text-muted-foreground">
                   Complete an exam to see your results here
@@ -163,9 +163,9 @@ export default function Exams() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         {submission.passed ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <span className="emoji-icon text-xl">✅</span>
                         ) : (
-                          <XCircle className="h-5 w-5 text-red-500" />
+                          <span className="emoji-icon text-xl">❌</span>
                         )}
                         <div>
                           <h4 className="font-medium">
@@ -192,7 +192,7 @@ export default function Exams() {
           ) : (
             <Card>
               <CardContent className="py-12 text-center">
-                <FileQuestion className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <span className="emoji-icon text-5xl block mb-4">📝</span>
                 <h3 className="font-semibold mb-2">No exam history</h3>
                 <p className="text-muted-foreground">
                   Your exam attempts will appear here

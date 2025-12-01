@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CourseIcon } from "@/components/ui/course-icon";
-import { Clock, BookOpen, BarChart3 } from "lucide-react";
 
 const difficultyColors = {
   beginner: "bg-green-500/20 text-green-500",
@@ -70,11 +69,11 @@ export default function Courses() {
 
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
+                        <span className="emoji-icon">⏱️</span>
                         {course.estimatedHours}h
                       </div>
                       <div className="flex items-center gap-1">
-                        <BookOpen className="h-4 w-4" />
+                        <span className="emoji-icon">📖</span>
                         {course.totalLessons} lessons
                       </div>
                     </div>
@@ -83,7 +82,7 @@ export default function Courses() {
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
                           <span className="flex items-center gap-1 text-muted-foreground">
-                            <BarChart3 className="h-4 w-4" />
+                            <span className="emoji-icon">📊</span>
                             Progress
                           </span>
                           <span>{progress?.percentage ?? 0}%</span>
@@ -111,7 +110,7 @@ export default function Courses() {
       {courses?.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <span className="emoji-icon text-5xl block mb-4">📚</span>
             <h3 className="font-semibold mb-2">No courses available</h3>
             <p className="text-muted-foreground">
               Check back soon for new courses!
