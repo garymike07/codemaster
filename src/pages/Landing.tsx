@@ -103,7 +103,7 @@ export default function Landing() {
           <Badge variant="secondary" className="px-4 py-1.5 text-sm font-display tracking-wide">
             <span className="text-violet">&#9679;</span> Learn to code the right way
           </Badge>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight max-w-4xl leading-[1.1]">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight max-w-4xl leading-[1.1]">
             <span className="font-serif italic font-normal">Love coding</span>{" "}
             <span className="text-gradient-ocean font-display font-bold">again</span>
           </h1>
