@@ -53,10 +53,10 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    letter-spacing: -0.011em;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: 0;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -68,17 +68,18 @@
     background-repeat: no-repeat;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    line-height: 1.2;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
   }
-  h1 { font-size: 3rem; }
-  h2 { font-size: 2rem; }
-  h3 { font-size: 1.5rem; }
-  h4 { font-size: 1.25rem; }
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1rem; }
   p, span, a, li, td, th, label, input, textarea, select, button {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
   }
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -134,19 +135,21 @@
 
 /* Custom Font Families */
 .font-serif {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
 }
 
 .font-display {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-weight: 700;
 }
 
 .font-heading {
-  font-family: 'Sora', sans-serif;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-weight: 700;
 }
 
 .font-sans {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
 }
 
 /* Unique Color Palette */
