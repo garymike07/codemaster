@@ -1,7 +1,36 @@
 import { mutation } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
-// Helper function to create lessons for a module
-async function createLessons(ctx: any, moduleId: any, courseId: any, lessons: any[]) {
+type LessonSeed = {
+  title: string;
+  type: "theory" | "practice" | "challenge" | "project" | "quiz";
+  content: string;
+  order: number;
+  xpReward?: number;
+  estimatedMinutes?: number;
+  language?: string;
+  codeTemplate?: string;
+  solution?: string;
+  testCases?: Array<{
+    id?: string;
+    input: string;
+    expectedOutput: string;
+    isHidden?: boolean;
+    description?: string;
+    points?: number;
+  }>;
+  hints?: string[];
+};
+
+type SeedCtx = MutationCtx;
+
+async function createLessons(
+  ctx: SeedCtx,
+  moduleId: Id<"modules">,
+  courseId: Id<"courses">,
+  lessons: LessonSeed[]
+) {
   for (const lesson of lessons) {
     await ctx.db.insert("lessons", {
       moduleId,
@@ -14,7 +43,7 @@ async function createLessons(ctx: any, moduleId: any, courseId: any, lessons: an
 // ==========================================
 // PYTHON FUNDAMENTALS - 10 MODULES
 // ==========================================
-async function seedPythonCourse(ctx: any) {
+async function seedPythonCourse(ctx: SeedCtx) {
   const courseId = await ctx.db.insert("courses", {
     slug: "python-fundamentals",
     title: "Python Fundamentals",
@@ -1977,7 +2006,7 @@ print(f"Lowest: {result['lowest']}")`,
 // ==========================================
 // JAVASCRIPT MASTERY - 10 MODULES  
 // ==========================================
-async function seedJavaScriptCourse(ctx: any) {
+async function seedJavaScriptCourse(ctx: SeedCtx) {
   const courseId = await ctx.db.insert("courses", {
     slug: "javascript-mastery",
     title: "JavaScript Mastery",

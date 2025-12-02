@@ -9,20 +9,26 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CourseIcon } from "@/components/ui/course-icon";
 import { MessagingPanel } from "@/components/messaging/MessagingPanel";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
+import { ProgressCharts } from "@/components/ProgressCharts";
+
+const DEMO_ACTIVITY_DATA = [
+  { date: "2024-12-02", count: 3 },
+  { date: "2024-12-01", count: 5 },
+  { date: "2024-11-30", count: 2 },
+];
 
 export default function Dashboard() {
   const [showMessaging, setShowMessaging] = useState(false);
-  
+
   const { user } = useUser();
-  const currentUser = useQuery(api.users.current);
   const continuelearning = useQuery(api.enrollments.getContinueLearning);
   const enrollments = useQuery(api.enrollments.getMyEnrollments);
   const allProgress = useQuery(api.progress.getAllProgress);
   const courses = useQuery(api.courses.list);
   const seedCourses = useMutation(api.seed.seedCourses);
-  const seedAllCourses = useMutation(api.seedAllCourses.seedAllCourses);
   const unreadCount = useQuery(api.messaging.getUnreadCount);
-  
+
   // Gamification data
   const userStats = useQuery(api.gamification.getUserStats);
   const streak = useQuery(api.gamification.getStreak);
@@ -34,9 +40,9 @@ export default function Dashboard() {
     averageProgress:
       allProgress && allProgress.length > 0
         ? Math.round(
-            allProgress.reduce((sum, p) => sum + (p?.percentage ?? 0), 0) /
-              allProgress.length
-          )
+          allProgress.reduce((sum, p) => sum + (p?.percentage ?? 0), 0) /
+          allProgress.length
+        )
         : 0,
   };
 
@@ -44,14 +50,12 @@ export default function Dashboard() {
     await seedCourses();
   };
 
-  const handleSeedAll = async () => {
-    await seedAllCourses();
-  };
-
   const getLevelName = (level: number) => {
     const names = ["Novice", "Apprentice", "Junior", "Developer", "Senior", "Expert", "Master", "Grandmaster"];
     return names[Math.min(level - 1, names.length - 1)] || "Novice";
   };
+
+
 
   return (
     <div className="space-y-8">
@@ -62,26 +66,13 @@ export default function Dashboard() {
             Welcome back, {user?.firstName ?? "Learner"}!
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            {currentUser?.role === "teacher"
-              ? "Manage your courses and students"
-              : "Continue your learning journey"}
+            Continue your learning journey
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {currentUser?.role === "teacher" && (
-            <Link to="/teacher">
-              <Button size="sm" className="md:size-default">
-                <span className="emoji-icon mr-2">👨‍🏫</span>
-                <span className="hidden sm:inline">Teacher </span>Dashboard
-              </Button>
-            </Link>
-          )}
           {courses?.length === 0 && (
             <Button onClick={handleSeed} size="sm">🌱 Seed Sample</Button>
           )}
-          <Button onClick={handleSeedAll} variant="outline" size="sm">
-            <span className="hidden sm:inline">🌱 Seed Full </span>Curriculum
-          </Button>
         </div>
       </div>
 
@@ -254,6 +245,34 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Progress Visualization */}
+      <ProgressCharts
+        totalXp={userStats?.totalXp ?? 0}
+        level={userStats?.level ?? 1}
+        lessonsCompleted={userStats?.lessonsCompleted ?? stats.completedLessons}
+        challengesCompleted={userStats?.challengesCompleted ?? 0}
+        examsPassed={userStats?.examsPassed ?? 0}
+      />
+
+      {/* Activity Heatmap */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <span className="emoji-icon">📅</span>
+            Learning Activity
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Your coding activity over the past year
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ActivityHeatmap
+            data={DEMO_ACTIVITY_DATA}
+            maxCount={10}
+          />
+        </CardContent>
+      </Card>
 
       {/* My Courses */}
       <div>

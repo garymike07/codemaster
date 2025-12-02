@@ -17,7 +17,7 @@ import {
   Loader2,
   Save,
 } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/theme-context";
 import type { Id } from "../../convex/_generated/dataModel";
 
 interface TestCase {

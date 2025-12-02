@@ -1,4 +1,7 @@
 import { mutation } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
+
+type SeedCtx = MutationCtx;
 
 export const seedAllCourses = mutation({
   args: {},
@@ -61,7 +64,7 @@ export const seedAllCourses = mutation({
   },
 });
 
-async function seedBadges(ctx: any) {
+async function seedBadges(ctx: SeedCtx) {
   const badges = [
     { name: "First Steps", icon: "🌟", description: "Complete your first lesson", criteria: "lessons_completed >= 1", xpReward: 50, category: "completion" as const },
     { name: "Getting Started", icon: "🚀", description: "Complete 10 lessons", criteria: "lessons_completed >= 10", xpReward: 100, category: "completion" as const },
@@ -82,7 +85,7 @@ async function seedBadges(ctx: any) {
   }
 }
 
-async function seedPythonCourse(ctx: any) {
+async function seedPythonCourse(ctx: SeedCtx) {
   const courseId = await ctx.db.insert("courses", {
     slug: "python-fundamentals",
     title: "Python Fundamentals",
@@ -1046,7 +1049,7 @@ print(f"Average Grade: {average}")`,
   });
 }
 
-async function seedJavaScriptCourse(ctx: any) {
+async function seedJavaScriptCourse(ctx: SeedCtx) {
   const courseId = await ctx.db.insert("courses", {
     slug: "javascript-mastery",
     title: "JavaScript Mastery",
@@ -1561,7 +1564,7 @@ const printUser = ({ name, age }) => {
   });
 }
 
-async function seedReactCourse(ctx: any) {
+async function seedReactCourse(ctx: SeedCtx) {
   const courseId = await ctx.db.insert("courses", {
     slug: "react-development",
     title: "React Development",

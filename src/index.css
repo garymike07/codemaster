@@ -1,3 +1,5 @@
+@import url("https://api.fontshare.com/v2/css?f[]=agrandir@400,500,600,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @layer base {
@@ -8,20 +10,44 @@
     --card-foreground: 220 25% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 10%;
-    --primary: 190 85% 45%;
+    --primary: 190 85% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 15% 93%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary: 280 70% 60%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 210 15% 93%;
     --muted-foreground: 220 10% 45%;
-    --accent: 280 70% 55%;
+    --accent: 0 75% 65%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
+    --success: 168 76% 42%;
+    --warning: 38 92% 50%;
+    --info: 199 89% 48%;
     --border: 210 15% 88%;
     --input: 210 15% 88%;
-    --ring: 190 85% 45%;
+    --ring: 190 85% 50%;
     --radius: 0.5rem;
+
+    /* Refined Typography */
+    --font-display: "Agrandir", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", "Consolas", monospace;
+
+    /* Fluid Typography */
+    --font-size-base: clamp(0.95rem, 0.9rem + 0.2vw, 1.05rem);
+    --font-size-h1: clamp(2.25rem, 3.4vw, 3.75rem);
+    --font-size-h2: clamp(1.9rem, 2.6vw, 3rem);
+    --font-size-h3: clamp(1.5rem, 2vw, 2.1rem);
+    --font-size-h4: clamp(1.25rem, 1.6vw, 1.7rem);
+
+    /* Consistent Spacing Scale */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
   }
 
   .dark {
@@ -33,14 +59,17 @@
     --popover-foreground: 210 20% 95%;
     --primary: 190 85% 50%;
     --primary-foreground: 220 25% 6%;
-    --secondary: 220 20% 14%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 280 70% 60%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 220 20% 14%;
     --muted-foreground: 215 15% 55%;
-    --accent: 280 70% 60%;
+    --accent: 0 75% 65%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 100%;
+    --success: 168 76% 42%;
+    --warning: 38 92% 50%;
+    --info: 199 89% 48%;
     --border: 220 18% 16%;
     --input: 220 18% 16%;
     --ring: 190 85% 50%;
@@ -51,13 +80,16 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    letter-spacing: 0;
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: 1.7;
+    letter-spacing: 0.01em;
     font-weight: 400;
+    font-feature-settings: "liga", "calt", "kern";
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Background Image Configuration */
@@ -67,17 +99,62 @@
     background-attachment: fixed;
     background-repeat: no-repeat;
   }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    line-height: 1.3;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
   }
-  p, a, li, td, th, label, input, textarea, select, button {
-    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+
+  h1 {
+    font-size: var(--font-size-h1);
   }
-  code, pre, .font-mono {
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+
+  h2 {
+    font-size: var(--font-size-h2);
+  }
+
+  h3 {
+    font-size: var(--font-size-h3);
+  }
+
+  h4 {
+    font-size: var(--font-size-h4);
+  }
+
+  h5 {
+    font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.3rem);
+  }
+
+  h6 {
+    font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.15rem);
+    letter-spacing: -0.015em;
+  }
+
+  p,
+  a,
+  li,
+  td,
+  th,
+  label,
+  input,
+  textarea,
+  select,
+  button {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: var(--font-mono);
   }
 }
 
@@ -108,8 +185,13 @@
 }
 
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-marquee {
@@ -130,113 +212,142 @@
 
 /* Custom Font Families */
 .font-serif {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-serif);
 }
 
 .font-display {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 600;
 }
 
 .font-heading {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .font-sans {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-body);
 }
 
-/* Unique Color Palette */
-.text-coral { color: #ff6b6b; }
-.text-mint { color: #4ecdc4; }
-.text-amber { color: #ffa94d; }
-.text-violet { color: #9775fa; }
-.text-rose { color: #f06595; }
-.text-sky { color: #74c0fc; }
-.text-lime { color: #a9e34b; }
-.text-gold { color: #ffd43b; }
-.text-indigo { color: #5c7cfa; }
-.text-teal { color: #20c997; }
+/* Simplified Color Palette - 5 Core Colors */
+.text-primary {
+  color: hsl(var(--primary));
+}
 
-.bg-coral { background-color: #ff6b6b; }
-.bg-mint { background-color: #4ecdc4; }
-.bg-amber { background-color: #ffa94d; }
-.bg-violet { background-color: #9775fa; }
-.bg-rose { background-color: #f06595; }
-.bg-sky { background-color: #74c0fc; }
-.bg-lime { background-color: #a9e34b; }
-.bg-gold { background-color: #ffd43b; }
-.bg-indigo { background-color: #5c7cfa; }
-.bg-teal { background-color: #20c997; }
+.text-secondary {
+  color: hsl(var(--secondary));
+}
+
+.text-accent {
+  color: hsl(var(--accent));
+}
+
+.text-success {
+  color: hsl(var(--success));
+}
+
+.text-warning {
+  color: hsl(var(--warning));
+}
+
+.text-info {
+  color: hsl(var(--info));
+}
+
+.bg-primary {
+  background-color: hsl(var(--primary));
+}
+
+.bg-secondary {
+  background-color: hsl(var(--secondary));
+}
+
+.bg-accent {
+  background-color: hsl(var(--accent));
+}
+
+.bg-success {
+  background-color: hsl(var(--success));
+}
+
+.bg-warning {
+  background-color: hsl(var(--warning));
+}
+
+.bg-info {
+  background-color: hsl(var(--info));
+}
 
 /* Gradient Text */
-.text-gradient-coral {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ffa94d 100%);
+.text-gradient-primary {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--info)) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.text-gradient-ocean {
-  background: linear-gradient(135deg, #4ecdc4 0%, #5c7cfa 100%);
+.text-gradient-secondary {
+  background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--accent)) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.text-gradient-sunset {
-  background: linear-gradient(135deg, #f06595 0%, #ffd43b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.text-gradient-purple {
-  background: linear-gradient(135deg, #9775fa 0%, #f06595 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.text-gradient-forest {
-  background: linear-gradient(135deg, #20c997 0%, #a9e34b 100%);
+.text-gradient-accent {
+  background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--warning)) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 /* Gradient Backgrounds */
-.bg-gradient-coral {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ffa94d 100%);
+.bg-gradient-primary {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--info)) 100%);
 }
 
-.bg-gradient-ocean {
-  background: linear-gradient(135deg, #4ecdc4 0%, #5c7cfa 100%);
-}
-
-.bg-gradient-sunset {
-  background: linear-gradient(135deg, #f06595 0%, #ffd43b 100%);
-}
-
-.bg-gradient-purple {
-  background: linear-gradient(135deg, #9775fa 0%, #f06595 100%);
+.bg-gradient-secondary {
+  background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--accent)) 100%);
 }
 
 /* Subtle background tints */
-.bg-coral\/10 { background-color: rgba(255, 107, 107, 0.1); }
-.bg-mint\/10 { background-color: rgba(78, 205, 196, 0.1); }
-.bg-amber\/10 { background-color: rgba(255, 169, 77, 0.1); }
-.bg-violet\/10 { background-color: rgba(151, 117, 250, 0.1); }
-.bg-rose\/10 { background-color: rgba(240, 101, 149, 0.1); }
-.bg-sky\/10 { background-color: rgba(116, 192, 252, 0.1); }
-.bg-indigo\/10 { background-color: rgba(92, 124, 250, 0.1); }
-.bg-teal\/10 { background-color: rgba(32, 201, 151, 0.1); }
+.bg-primary\/10 {
+  background-color: hsl(var(--primary) / 0.1);
+}
+
+.bg-secondary\/10 {
+  background-color: hsl(var(--secondary) / 0.1);
+}
+
+.bg-accent\/10 {
+  background-color: hsl(var(--accent) / 0.1);
+}
+
+.bg-success\/10 {
+  background-color: hsl(var(--success) / 0.1);
+}
+
+.bg-warning\/10 {
+  background-color: hsl(var(--warning) / 0.1);
+}
+
+.bg-info\/10 {
+  background-color: hsl(var(--info) / 0.1);
+}
 
 /* Border colors */
-.border-coral { border-color: #ff6b6b; }
-.border-mint { border-color: #4ecdc4; }
-.border-violet { border-color: #9775fa; }
-.border-rose { border-color: #f06595; }
-.border-indigo { border-color: #5c7cfa; }
-.border-teal { border-color: #20c997; }
+.border-primary {
+  border-color: hsl(var(--primary));
+}
+
+.border-secondary {
+  border-color: hsl(var(--secondary));
+}
+
+.border-accent {
+  border-color: hsl(var(--accent));
+}
+
+.border-success {
+  border-color: hsl(var(--success));
+}

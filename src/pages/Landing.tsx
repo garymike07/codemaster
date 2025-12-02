@@ -5,6 +5,45 @@ import { Badge } from "@/components/ui/badge";
 import { CourseIcon } from "@/components/ui/course-icon";
 import { Logo } from "@/components/ui/logo";
 import { LinkBridgeLogo } from "@/components/ui/linkbridge-logo";
+import { InteractiveDemo } from "@/components/InteractiveDemo";
+
+const testimonials = [
+  {
+    name: "Sarah Chen",
+    role: "Software Engineer at Google",
+    avatar: "SC",
+    content: "CodeMaster helped me transition from a non-tech background to landing my dream job. The interactive exercises made learning to code feel like playing a game.",
+    rating: 5,
+  },
+  {
+    name: "James Rodriguez",
+    role: "Full-Stack Developer",
+    avatar: "JR",
+    content: "I've tried many platforms, but CodeMaster's hands-on approach is unmatched. The real-time feedback on my code helped me learn 3x faster.",
+    rating: 5,
+  },
+  {
+    name: "Emily Watson",
+    role: "CS Student at MIT",
+    avatar: "EW",
+    content: "The gamification features kept me motivated through tough concepts. I've completed 5 courses and earned my first internship!",
+    rating: 5,
+  },
+  {
+    name: "Michael Park",
+    role: "Product Manager turned Developer",
+    avatar: "MP",
+    content: "Finally, a platform that teaches practical skills. Within 3 months, I built my first React app and automated my entire workflow.",
+    rating: 5,
+  },
+];
+
+const stats = [
+  { value: "50K+", label: "Active Learners" },
+  { value: "95%", label: "Completion Rate" },
+  { value: "4.9", label: "Average Rating" },
+  { value: "200+", label: "Coding Challenges" },
+];
 
 const features = [
   {
@@ -12,42 +51,42 @@ const features = [
     title: "Interactive Code Editor",
     description:
       "Write and execute code directly in your browser with real-time feedback.",
-    bgClass: "bg-coral/10",
+    bgClass: "bg-primary/10",
   },
   {
     emoji: "✅",
     title: "Auto-Graded Exercises",
     description:
       "Get instant feedback on your solutions with automated test cases.",
-    bgClass: "bg-mint/10",
+    bgClass: "bg-success/10",
   },
   {
     emoji: "⚡",
     title: "Learn by Doing",
     description:
       "Practice with hands-on coding challenges after each concept.",
-    bgClass: "bg-amber/10",
+    bgClass: "bg-warning/10",
   },
   {
     emoji: "👨‍🏫",
     title: "Expert-Crafted Content",
     description:
       "Courses designed by industry professionals and educators.",
-    bgClass: "bg-violet/10",
+    bgClass: "bg-secondary/10",
   },
   {
     emoji: "🏆",
     title: "Track Your Progress",
     description:
       "Monitor your learning journey with detailed progress tracking.",
-    bgClass: "bg-rose/10",
+    bgClass: "bg-accent/10",
   },
   {
     emoji: "💻",
     title: "Multiple Languages",
     description:
       "Learn Python, JavaScript, React, Go, Rust, and many more.",
-    bgClass: "bg-indigo/10",
+    bgClass: "bg-info/10",
   },
 ];
 
@@ -139,6 +178,23 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Interactive Demo Section */}
+      <section className="container px-4 py-16 md:py-20 bg-muted/20">
+        <div className="text-center mb-12">
+          <Badge variant="secondary" className="px-4 py-1.5 text-sm font-display tracking-wide mb-4">
+            <span className="text-primary">●</span> Try it now
+          </Badge>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 font-display">
+            Start Coding in <span className="text-gradient-primary">Seconds</span>
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            No signup required. Experience our interactive code editor right now.
+          </p>
+        </div>
+        <InteractiveDemo />
+      </section>
+
+
       {/* Courses Preview */}
       <section className="container py-16 overflow-hidden">
         <div className="text-center mb-12">
@@ -149,12 +205,12 @@ export default function Landing() {
             Start your journey with our <span className="text-sky font-medium">most popular</span> programming courses
           </p>
         </div>
-        
+
         <div className="relative w-full">
           {/* Gradient Masks for Fade Effect */}
           <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-          
+
           <div className="flex overflow-hidden group">
             <div className="flex gap-4 animate-marquee pause-on-hover min-w-full shrink-0">
               {[...courses, ...courses].map((course, index) => (
@@ -216,6 +272,61 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Social Proof - Stats */}
+      <section className="container px-4 py-12 md:py-16 border-t border-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          {stats.map((stat) => (
+            <div key={stat.label} className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-gradient-primary mb-1">
+                {stat.value}
+              </div>
+              <div className="text-sm text-muted-foreground">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="container px-4 py-12 md:py-16">
+        <div className="text-center mb-8 md:mb-12">
+          <Badge variant="secondary" className="px-4 py-1.5 text-sm font-display tracking-wide mb-4">
+            <span className="text-warning">★</span> Trusted by thousands
+          </Badge>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 font-display">
+            <span className="emoji-icon">💬</span> What Our <span className="text-gradient-secondary">Learners</span> Say
+          </h2>
+          <p className="text-muted-foreground font-sans">
+            Join a community of <span className="text-primary font-medium">successful developers</span> who started here
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {testimonials.map((testimonial) => (
+            <div
+              key={testimonial.name}
+              className="p-6 rounded-xl border border-border bg-card hover:border-primary/30 transition-all duration-300"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold shrink-0">
+                  {testimonial.avatar}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold font-display">{testimonial.name}</span>
+                    <div className="flex text-warning text-sm">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <span key={i}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">{testimonial.role}</p>
+                  <p className="text-sm leading-relaxed">"{testimonial.content}"</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="container px-4 py-12 md:py-16">
         <div className="rounded-xl border border-border bg-gradient-to-br from-card via-card to-violet/5 p-6 md:p-12 text-center">
@@ -253,7 +364,7 @@ export default function Landing() {
               <Logo className="mb-4" />
               <p className="text-muted-foreground max-w-sm font-sans">
                 Empowering the <span className="text-lime font-medium">next generation</span> of developers with{" "}
-                <span className="text-sky">interactive learning</span>, 
+                <span className="text-sky">interactive learning</span>,
                 expert-crafted courses, and real-world projects.
               </p>
             </div>
@@ -270,9 +381,9 @@ export default function Landing() {
                 </li>
                 <li className="flex items-center gap-2 hover:text-primary transition-colors">
                   <span className="text-lg emoji-icon">🔗</span>
-                  <a 
-                    href="https://www.linkedin.com/in/mike-waitindi-654bb2344/" 
-                    target="_blank" 
+                  <a
+                    href="https://www.linkedin.com/in/mike-waitindi-654bb2344/"
+                    target="_blank"
                     rel="noopener noreferrer"
                   >
                     LinkedIn Profile

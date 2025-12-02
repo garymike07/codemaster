@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
-import { useConvexAuth, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
+import { useConvexAuth } from "convex/react";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
@@ -11,7 +10,7 @@ import Exams from "./pages/Exams";
 import ExamRunner from "./pages/ExamRunner";
 import ExamCentre from "./pages/ExamCentre";
 import ExamWorkspace from "./pages/ExamWorkspace";
-import TeacherDashboard from "./pages/TeacherDashboard";
+import Playground from "./pages/Playground";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -23,32 +22,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
-  }
-
-  return (
-    <>
-      <SignedIn>{children}</SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
-  );
-}
-
-function TeacherRoute({ children }: { children: React.ReactNode }) {
-  const { isLoading } = useConvexAuth();
-  const currentUser = useQuery(api.users.current);
-
-  if (isLoading || currentUser === undefined) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
-  if (currentUser?.role !== "teacher") {
-    return <Navigate to="/dashboard" replace />;
   }
 
   return (
@@ -137,25 +110,12 @@ function App() {
           </ProtectedRoute>
         }
       />
-      {/* Teacher Routes */}
       <Route
-        path="/teacher"
+        path="/playground"
         element={
-          <TeacherRoute>
-            <DashboardLayout>
-              <TeacherDashboard />
-            </DashboardLayout>
-          </TeacherRoute>
-        }
-      />
-      <Route
-        path="/teacher/dashboard"
-        element={
-          <TeacherRoute>
-            <DashboardLayout>
-              <TeacherDashboard />
-            </DashboardLayout>
-          </TeacherRoute>
+          <ProtectedRoute>
+            <Playground />
+          </ProtectedRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />

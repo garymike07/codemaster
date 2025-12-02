@@ -1,47 +1,23 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { UserButton } from "@clerk/clerk-react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import { LinkBridgeLogo } from "@/components/ui/linkbridge-logo";
 
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/theme-context";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { theme, setTheme } = useTheme();
-  const currentUser = useQuery(api.users.current);
-  const switchRole = useMutation(api.users.switchRole);
 
-  const studentNavItems = [
+  const navItems = [
     { href: "/dashboard", label: "Dashboard", emoji: "📊" },
     { href: "/courses", label: "Courses", emoji: "🎓" },
+    { href: "/playground", label: "Playground", emoji: "💻" },
     { href: "/exams", label: "Exams", emoji: "📝" },
   ];
-
-  const teacherNavItems = [
-    { href: "/teacher", label: "Dashboard", emoji: "📋" },
-    { href: "/courses", label: "Courses", emoji: "🎓" },
-    { href: "/teacher", label: "Students", emoji: "👥" },
-  ];
-
-  const navItems = currentUser?.role === "teacher" ? teacherNavItems : studentNavItems;
-
-  const handleSwitchRole = async () => {
-    await switchRole();
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -85,35 +61,6 @@ export function Navbar() {
         </Button>
 
         <div className="flex items-center gap-2">
-          {currentUser && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1 md:gap-2 px-2 md:px-3">
-                  <Badge
-                    variant={
-                      currentUser.role === "teacher" ? "default" : "secondary"
-                    }
-                    className="text-xs"
-                  >
-                    {currentUser.role === "teacher" ? "👨‍🏫" : "🎓"}
-                    <span className="hidden sm:inline ml-1">
-                      {currentUser.role === "teacher" ? "Teacher" : "Student"}
-                    </span>
-                  </Badge>
-                  <span className="emoji-icon text-xs">▼</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Current Role</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSwitchRole}>
-                  Switch to{" "}
-                  {currentUser.role === "teacher" ? "Student" : "Teacher"}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
           <Button
             variant="ghost"
             size="icon"

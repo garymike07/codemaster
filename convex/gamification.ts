@@ -66,7 +66,7 @@ export const awardXp = mutation({
     });
 
     // Update user stats
-    let stats = await ctx.db
+    const stats = await ctx.db
       .query("userStats")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .unique();
@@ -148,7 +148,7 @@ export const updateStreak = mutation({
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-    let streak = await ctx.db
+    const streak = await ctx.db
       .query("streaks")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .unique();
@@ -446,7 +446,7 @@ export const updateStatsOnLessonComplete = mutation({
 
     if (!user) throw new Error("User not found");
 
-    let stats = await ctx.db
+    const stats = await ctx.db
       .query("userStats")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .unique();

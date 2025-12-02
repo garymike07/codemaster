@@ -74,6 +74,15 @@ export const getPublishedExams = query({
       .withIndex("by_published", (q) => q.eq("isPublished", true))
       .collect();
 
+    // Filter exams: 
+    // 1. Show all regular exams (courseId != "AI_PRACTICE")
+    // 2. Show AI practice exams ONLY if created by the current user
+    const visibleExams = exams.filter(exam => {
+      const isPractice = exam.courseId === "AI_PRACTICE";
+      if (!isPractice) return true;
+      return exam.createdBy === user._id;
+    });
+
     // Get user's submissions to determine status
     const submissions = await ctx.db
       .query("examSubmissions")
@@ -86,7 +95,7 @@ export const getPublishedExams = query({
 
     // Fetch course info for each exam
     const examsWithStatus = await Promise.all(
-      exams.map(async (exam) => {
+      visibleExams.map(async (exam) => {
         const submission = submissionMap.get(exam._id);
         let courseName = "General";
         

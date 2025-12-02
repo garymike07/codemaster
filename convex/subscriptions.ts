@@ -138,7 +138,7 @@ export const checkAccess = query({
   args: {
     feature: v.optional(v.string()),
   },
-  handler: async (ctx, _args) => {
+  handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return { hasAccess: false, reason: "not_authenticated" };
 

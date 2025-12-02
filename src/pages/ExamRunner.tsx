@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -22,7 +22,7 @@ export default function ExamRunner() {
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [startedAt] = useState(Date.now());
+  const [startedAt] = useState(() => Date.now());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [result, setResult] = useState<{
@@ -33,10 +33,30 @@ export default function ExamRunner() {
   } | null>(null);
 
   useEffect(() => {
-    if (exam) {
+    if (!exam) return;
+
+    startTransition(() => {
       setTimeLeft(exam.durationMinutes * 60);
-    }
+    });
   }, [exam]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!exam) return;
+
+    const submissionAnswers = exam.questions.map((q) => ({
+      questionId: q.id,
+      answer: answers[q.id] ?? "",
+    }));
+
+    const submissionResult = await submitExam({
+      examId: exam._id,
+      answers: submissionAnswers,
+      startedAt,
+    });
+
+    setResult(submissionResult);
+    setIsSubmitted(true);
+  }, [answers, exam, startedAt, submitExam]);
 
   useEffect(() => {
     if (timeLeft === null || timeLeft <= 0 || isSubmitted) return;
@@ -52,15 +72,7 @@ export default function ExamRunner() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isSubmitted]);
-
-  if (!exam) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
+  }, [timeLeft, isSubmitted, handleSubmit]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -77,22 +89,6 @@ export default function ExamRunner() {
       ...prev,
       [question.id]: answer,
     }));
-  };
-
-  const handleSubmit = async () => {
-    const submissionAnswers = exam.questions.map((q) => ({
-      questionId: q.id,
-      answer: answers[q.id] ?? "",
-    }));
-
-    const result = await submitExam({
-      examId: exam._id,
-      answers: submissionAnswers,
-      startedAt,
-    });
-
-    setResult(result);
-    setIsSubmitted(true);
   };
 
   if (isSubmitted && result) {

@@ -4,6 +4,52 @@ import { v } from "convex/values";
 import { action } from "./_generated/server";
 import OpenAI from "openai";
 
+type RawTestCase = {
+  input: string;
+  expectedOutput: string;
+  isHidden?: boolean;
+};
+
+type RawCodeQuestion = {
+  id?: string;
+  question: string;
+  codeTemplate?: string;
+  testCases?: RawTestCase[];
+  solution?: string;
+  points?: number;
+  hints?: string[];
+};
+
+type RawMultipleChoiceQuestion = {
+  id?: string;
+  question: string;
+  options?: string[];
+  correctAnswer: string;
+  points?: number;
+  explanation?: string;
+};
+
+type CodeQuestion = {
+  id: string;
+  type: "code";
+  question: string;
+  codeTemplate: string;
+  testCases: RawTestCase[];
+  solution: string;
+  points: number;
+  hints: string[];
+};
+
+type MultipleChoiceQuestion = {
+  id: string;
+  type: "multiple_choice";
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  points: number;
+  explanation: string;
+};
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -91,26 +137,31 @@ Requirements:
       }
       cleanedResponse = cleanedResponse.trim();
 
-      const parsed = JSON.parse(cleanedResponse);
+      const parsed = JSON.parse(cleanedResponse) as { questions?: RawCodeQuestion[] };
       
       // Validate and add IDs if missing
-      const questions = parsed.questions.map((q: any, index: number) => ({
+      const questions: CodeQuestion[] = (parsed.questions ?? []).map((q, index) => ({
         id: q.id || `q${index + 1}`,
         type: "code" as const,
         question: q.question,
         codeTemplate: q.codeTemplate || "",
-        testCases: q.testCases || [],
+        testCases: q.testCases?.map((testCase) => ({
+          input: testCase.input,
+          expectedOutput: testCase.expectedOutput,
+          isHidden: testCase.isHidden,
+        })) || [],
         solution: q.solution || "",
         points: q.points || 20,
         hints: q.hints || [],
       }));
 
       return { success: true, questions };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("AI Generation Error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate questions";
       return {
         success: false,
-        error: error.message || "Failed to generate questions",
+        error: errorMessage,
         questions: [],
       };
     }
@@ -184,9 +235,9 @@ Requirements:
       }
       cleanedResponse = cleanedResponse.trim();
 
-      const parsed = JSON.parse(cleanedResponse);
+      const parsed = JSON.parse(cleanedResponse) as { questions?: RawMultipleChoiceQuestion[] };
       
-      const questions = parsed.questions.map((q: any, index: number) => ({
+      const questions: MultipleChoiceQuestion[] = (parsed.questions ?? []).map((q, index) => ({
         id: q.id || `mc${index + 1}`,
         type: "multiple_choice" as const,
         question: q.question,
@@ -197,12 +248,70 @@ Requirements:
       }));
 
       return { success: true, questions };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("AI Generation Error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate questions";
       return {
         success: false,
-        error: error.message || "Failed to generate questions",
+        error: errorMessage,
         questions: [],
+      };
+    }
+  },
+});
+
+export const ask = action({
+  args: {
+    message: v.string(),
+    context: v.optional(v.string()),
+    code: v.optional(v.string()),
+    lessonType: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const { message, context, code, lessonType } = args;
+
+    const systemPrompt = `You are a helpful and encouraging coding tutor.
+You are helping a student learn programming.
+The student is currently working on a ${lessonType === "theory" ? "theoretical lesson" : "coding exercise"}.
+
+Context provided:
+- Lesson Content: The theory or problem description the student is reading.
+- ${lessonType === "theory" ? "Note: This is a theory lesson, so the student might not be writing code yet." : "Student's Code: The code the student has written so far."}
+
+Your goal is to:
+1. Answer the student's specific question.
+2. If they are stuck, provide hints rather than the full solution immediately.
+3. Explain concepts clearly and simply.
+4. If there is an error in their code, explain *why* it is happening, don't just fix it.
+5. Keep responses concise (under 3-4 paragraphs) as they are reading in a chat window.`;
+
+    const userContent = `
+${context ? `LESSON CONTENT:\n${context}\n\n` : ""}
+${code ? `CURRENT CODE:\n${code}\n\n` : ""}
+STUDENT QUESTION: ${message}
+`;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      return {
+        success: true,
+        message: completion.choices[0]?.message?.content || "I couldn't generate a response.",
+      };
+    } catch (error: unknown) {
+      console.error("AI Chat Error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to get response";
+      return {
+        success: false,
+        error: errorMessage,
       };
     }
   },

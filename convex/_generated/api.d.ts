@@ -11,6 +11,7 @@
 import type * as ai from "../ai.js";
 import type * as cleanup from "../cleanup.js";
 import type * as courses from "../courses.js";
+import type * as debugLessons from "../debugLessons.js";
 import type * as enrollments from "../enrollments.js";
 import type * as examBank from "../examBank.js";
 import type * as examPublishing from "../examPublishing.js";
@@ -20,13 +21,11 @@ import type * as messaging from "../messaging.js";
 import type * as progress from "../progress.js";
 import type * as seed from "../seed.js";
 import type * as seedAdditionalCourses from "../seedAdditionalCourses.js";
-import type * as seedAllCourses from "../seedAllCourses.js";
-import type * as seedAllCourses20Modules from "../seedAllCourses20Modules.js";
-import type * as seedAllCoursesComplete from "../seedAllCoursesComplete.js";
 import type * as seedCourses from "../seedCourses.js";
 import type * as seedExpandedCourses from "../seedExpandedCourses.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as teacher from "../teacher.js";
+import type * as updateLessonContent from "../updateLessonContent.js";
 import type * as users from "../users.js";
 
 import type {
@@ -39,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   cleanup: typeof cleanup;
   courses: typeof courses;
+  debugLessons: typeof debugLessons;
   enrollments: typeof enrollments;
   examBank: typeof examBank;
   examPublishing: typeof examPublishing;
@@ -48,13 +48,11 @@ declare const fullApi: ApiFromModules<{
   progress: typeof progress;
   seed: typeof seed;
   seedAdditionalCourses: typeof seedAdditionalCourses;
-  seedAllCourses: typeof seedAllCourses;
-  seedAllCourses20Modules: typeof seedAllCourses20Modules;
-  seedAllCoursesComplete: typeof seedAllCoursesComplete;
   seedCourses: typeof seedCourses;
   seedExpandedCourses: typeof seedExpandedCourses;
   subscriptions: typeof subscriptions;
   teacher: typeof teacher;
+  updateLessonContent: typeof updateLessonContent;
   users: typeof users;
 }>;
 

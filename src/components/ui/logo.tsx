@@ -1,4 +1,4 @@
-import { Terminal, Code2, Cpu } from "lucide-react";
+import { Terminal, Code2 } from "lucide-react";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (

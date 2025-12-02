@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 
 export const list = query({
   args: {},
@@ -86,6 +87,29 @@ export const getCourseWithModulesAndLessons = query({
       ...course,
       modules: modulesWithLessons,
     };
+  },
+});
+
+export const getCourseLessons = query({
+  args: { courseId: v.id("courses") },
+  handler: async (ctx, args) => {
+    const modules = await ctx.db
+      .query("modules")
+      .withIndex("by_course", (q) => q.eq("courseId", args.courseId))
+      .collect();
+
+    const sortedModules = modules.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    const allLessons: Doc<"lessons">[] = [];
+    for (const module of sortedModules) {
+      const lessons = await ctx.db
+        .query("lessons")
+        .withIndex("by_module", (q) => q.eq("moduleId", module._id))
+        .collect();
+      allLessons.push(...lessons.sort((a, b) => a.order - b.order));
+    }
+
+    return allLessons;
   },
 });
 

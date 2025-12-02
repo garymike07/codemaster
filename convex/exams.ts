@@ -238,3 +238,97 @@ export const create = mutation({
     return examId;
   },
 });
+
+export const deleteExam = mutation({
+  args: {
+    examId: v.id("exams"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) throw new Error("User not found");
+
+    const exam = await ctx.db.get(args.examId);
+    if (!exam) throw new Error("Exam not found");
+
+    // Only allow deletion if:
+    // 1. It's an AI practice exam (courseId === "AI_PRACTICE")
+    // 2. The current user is the creator
+    if (exam.courseId !== "AI_PRACTICE" || exam.createdBy !== user._id) {
+      throw new Error("Not authorized to delete this exam");
+    }
+
+    await ctx.db.delete(args.examId);
+
+    // Clean up submissions associated with this exam
+    const submissions = await ctx.db
+      .query("examSubmissions")
+      .withIndex("by_exam", (q) => q.eq("examId", args.examId))
+      .collect();
+
+    for (const submission of submissions) {
+      await ctx.db.delete(submission._id);
+    }
+  },
+});
+
+export const createPracticeExam = mutation({
+  args: {
+    questions: v.array(
+      v.object({
+        id: v.string(),
+        type: v.literal("code"),
+        question: v.string(),
+        codeTemplate: v.string(),
+        testCases: v.array(
+          v.object({
+            input: v.string(),
+            expectedOutput: v.string(),
+            isHidden: v.optional(v.boolean()),
+          })
+        ),
+        solution: v.string(),
+        points: v.number(),
+        hints: v.optional(v.array(v.string())),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) throw new Error("User not found");
+
+    const totalPoints = args.questions.reduce((sum, q) => sum + q.points, 0);
+    const durationMinutes = 30 * args.questions.length; // 30 mins per question default
+
+    // Transform questions to match schema structure (schema uses v.any() for questions array in some places, but let's be consistent)
+    // The schema for exams table says: questions: v.array(v.any())
+    
+    const examId = await ctx.db.insert("exams", {
+      courseId: "AI_PRACTICE",
+      title: `AI Challenge: ${new Date().toLocaleDateString()}`,
+      description: "Personalized AI-generated coding challenge",
+      durationMinutes,
+      passingScore: 60, // 60% to pass
+      questions: args.questions,
+      totalPoints,
+      createdBy: user._id,
+      isPublished: true,
+      publishedAt: Date.now(),
+    });
+
+    return examId;
+  },
+});

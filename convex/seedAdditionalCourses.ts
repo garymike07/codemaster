@@ -1,7 +1,37 @@
 import { mutation } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+
+type LessonSeed = {
+  title: string;
+  type: "theory" | "practice" | "challenge" | "project" | "quiz";
+  content: string;
+  order: number;
+  xpReward?: number;
+  estimatedMinutes?: number;
+  language?: string;
+  codeTemplate?: string;
+  solution?: string;
+  testCases?: Array<{
+    id?: string;
+    input: string;
+    expectedOutput: string;
+    isHidden?: boolean;
+    description?: string;
+    points?: number;
+  }>;
+  hints?: string[];
+};
+
+type SeedCtx = MutationCtx;
 
 // Helper function to create lessons for a module
-async function createLessons(ctx: any, moduleId: any, courseId: any, lessons: any[]) {
+async function createLessons(
+  ctx: SeedCtx,
+  moduleId: Id<"modules">,
+  courseId: Id<"courses">,
+  lessons: LessonSeed[]
+) {
   for (const lesson of lessons) {
     await ctx.db.insert("lessons", {
       moduleId,
@@ -14,7 +44,7 @@ async function createLessons(ctx: any, moduleId: any, courseId: any, lessons: an
 // ==========================================
 // TYPESCRIPT DEVELOPMENT - 10 MODULES
 // ==========================================
-async function seedTypeScriptCourse(ctx: any) {
+async function seedTypeScriptCourse(ctx: SeedCtx) {
   const courseId = await ctx.db.insert("courses", {
     slug: "typescript-development",
     title: "TypeScript Development",
@@ -1389,7 +1419,7 @@ console.log(handleResponse(successResponse));`,
 // ==========================================
 // REACT DEVELOPMENT - 10 MODULES
 // ==========================================
-async function seedReactCourse(ctx: any) {
+async function seedReactCourse(ctx: SeedCtx) {
   const courseId = await ctx.db.insert("courses", {
     slug: "react-development",
     title: "React Development",
