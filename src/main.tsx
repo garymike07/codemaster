@@ -5,9 +5,20 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { useAuth } from "@clerk/clerk-react";
+import { loader } from "@monaco-editor/react";
 import { ThemeProvider } from "./components/theme-provider";
 import App from "./App";
 import "./index.css";
+
+// Configure Monaco to use its own loader and prevent AMD conflicts
+loader.config({
+  paths: {
+    vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs",
+  },
+  "vs/nls": {
+    availableLanguages: {},
+  },
+});
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
