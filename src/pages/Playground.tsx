@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import Editor from "@monaco-editor/react";
+import { LazyMonacoEditor } from "@/components/LazyMonacoEditor";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -267,7 +267,7 @@ export default function Playground() {
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <Editor
+                                    <LazyMonacoEditor
                                         height="100%"
                                         language={language}
                                         value={code}

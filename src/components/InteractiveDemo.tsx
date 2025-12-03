@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Editor from "@monaco-editor/react";
+import { LazyMonacoEditor } from "./LazyMonacoEditor";
 import { Button } from "./ui/button";
 import { Play, RotateCcw } from "lucide-react";
 
@@ -87,9 +87,9 @@ export function InteractiveDemo() {
 
         {/* Editor */}
         <div className="h-[250px]">
-          <Editor
+          <LazyMonacoEditor
             height="100%"
-            defaultLanguage="python"
+            language="python"
             value={code}
             onChange={(value) => setCode(value || "")}
             theme="vs-dark"

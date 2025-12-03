@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import Editor from "@monaco-editor/react";
+import { LazyMonacoEditor } from "@/components/LazyMonacoEditor";
 import { Button } from "@/components/ui/button";
-
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 import { useTheme } from "@/components/theme-context";
 import ChatAssistant from "@/components/ChatAssistant";
 import { EnhancedTestResults } from "@/components/EnhancedTestResults";
 import { EditorControls } from "@/components/EditorControls";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { LessonNotes } from "@/components/LessonNotes";
+import { ExampleCarousel } from "@/components/ExampleCarousel";
+import { AICodeExplainer } from "@/components/AICodeExplainer";
+import { KeyTakeawaysPanel } from "@/components/KeyTakeawaysPanel";
+import { BookOpen, Code2, Lightbulb, Play } from "lucide-react";
 
 interface TestResult {
   passed: boolean;
@@ -40,12 +43,19 @@ export default function LessonPlayer() {
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
-  const [activeTab, setActiveTab] = useState("output");
+  const [activeMainTab, setActiveMainTab] = useState("notes");
+  const [activeEditorTab, setActiveEditorTab] = useState("output");
   const [mobileView, setMobileView] = useState<"content" | "editor">("content");
+  const [selectedCode, setSelectedCode] = useState("");
 
   // Editor State
   const [fontSize, setFontSize] = useState(14);
   const [wordWrap, setWordWrap] = useState(true);
+
+  // AI Actions
+  const explainCodeAction = useAction(api.ai.explainCode);
+  const generateExampleAction = useAction(api.ai.generateExample);
+  const quizStudentAction = useAction(api.ai.quizStudent);
 
   useKeyboardShortcut({
     key: "Enter",
@@ -73,20 +83,20 @@ export default function LessonPlayer() {
     switch (language?.toLowerCase()) {
       case "cpp":
       case "c++":
-        return 54; // C++ (GCC 9.2.0)
+        return 54;
       case "java":
-        return 62; // Java (OpenJDK 13.0.1)
+        return 62;
       case "python":
-        return 71; // Python (3.8.1)
+        return 71;
       case "c":
-        return 50; // C (GCC 9.2.0)
+        return 50;
       case "c#":
       case "csharp":
-        return 51; // C# (Mono 6.6.0.161)
+        return 51;
       case "javascript":
       case "js":
       default:
-        return 63; // JavaScript (Node.js 12.14.0)
+        return 63;
     }
   };
 
@@ -94,7 +104,7 @@ export default function LessonPlayer() {
     setIsRunning(true);
     setOutput("");
     setTestResults([]);
-    setActiveTab("output");
+    setActiveEditorTab("output");
 
     try {
       const response = await fetch(
@@ -139,7 +149,7 @@ export default function LessonPlayer() {
 
     setIsRunning(true);
     setTestResults([]);
-    setActiveTab("tests");
+    setActiveEditorTab("tests");
 
     const results: TestResult[] = [];
 
@@ -209,8 +219,36 @@ export default function LessonPlayer() {
       const nextLesson = courseLessons[currentIndex + 1];
       navigate(`/lesson/${nextLesson._id}`);
     } else {
-      // If it's the last lesson, go back to course page or dashboard
       navigate(`/course/${lesson.courseId}`);
+    }
+  };
+
+  const handleExplainCode = async (codeToExplain: string, context: string) => {
+    const result = await explainCodeAction({
+      code: codeToExplain,
+      context: context || lesson.content,
+      simplify: false,
+    });
+    return result.success ? result.explanation || "" : "Failed to explain code";
+  };
+
+  const handleLoadExample = (exampleCode: string) => {
+    setCode(exampleCode);
+    setActiveMainTab("practice");
+  };
+
+  const handleQuizMe = async () => {
+    const result = await quizStudentAction({
+      topic: lesson.title,
+      context: lesson.content,
+      questionCount: 3,
+    });
+
+    if (result.success && result.questions) {
+      // For now, just log the questions. In a full implementation,
+      // you'd show them in a modal or separate component
+      console.log("Quiz questions:", result.questions);
+      alert(`Generated ${result.questions.length} quiz questions! Check console for details.`);
     }
   };
 
@@ -219,7 +257,7 @@ export default function LessonPlayer() {
       {/* Header */}
       <header className="border-b border-border bg-background px-2 md:px-4 py-2 md:py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
-          <Link to={`/course/javascript`}>
+          <Link to={`/course/${lesson.courseId}`}>
             <Button variant="ghost" size="sm" className="gap-1 md:gap-2 px-2 md:px-3">
               <span className="emoji-icon">←</span>
               <span className="hidden sm:inline">Back</span>
@@ -252,113 +290,163 @@ export default function LessonPlayer() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row">
-        {/* Left Panel - Content */}
-        <div className={`${mobileView === "content" ? "flex" : "hidden"} md:flex w-full md:w-1/2 border-r border-border overflow-auto p-4 md:p-6 flex-col`}>
-          <div className="prose prose-invert max-w-none text-sm md:text-base">
-            <div
-              dangerouslySetInnerHTML={{
-                __html: lesson.content
-                  .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-                  .replace(/`([^`]+)`/g, '<code>$1</code>')
-                  .replace(/## (.*)/g, '<h2>$1</h2>')
-                  .replace(/# (.*)/g, '<h1>$1</h1>')
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/\n\n/g, '</p><p>')
-                  .replace(/^(.+)$/gm, '<p>$1</p>')
-                  .replace(/<p><\/p>/g, '')
-                  .replace(/<p><h/g, '<h')
-                  .replace(/<\/h(\d)><\/p>/g, '</h$1>')
-                  .replace(/<p><pre>/g, '<pre>')
-                  .replace(/<\/pre><\/p>/g, '</pre>')
-                  .replace(/<p>- /g, '<li>')
-                  .replace(/<\/li><\/p>/g, '</li>'),
-              }}
-            />
-          </div>
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Left Panel - Content Tabs */}
+        <div className={`${mobileView === "content" ? "flex" : "hidden"} md:flex w-full md:w-1/2 border-r border-border flex-col`}>
+          <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="flex-1 flex flex-col">
+            <div className="border-b border-border px-4">
+              <TabsList className="bg-transparent">
+                <TabsTrigger value="notes" className="gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  <span className="hidden sm:inline">Notes</span>
+                </TabsTrigger>
+                {lesson.examples && lesson.examples.length > 0 && (
+                  <TabsTrigger value="examples" className="gap-2">
+                    <Lightbulb className="w-4 h-4" />
+                    <span className="hidden sm:inline">Examples</span>
+                    <Badge variant="secondary" className="ml-1">{lesson.examples.length}</Badge>
+                  </TabsTrigger>
+                )}
+                {lesson.type !== "theory" && (
+                  <TabsTrigger value="practice" className="gap-2">
+                    <Code2 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Practice</span>
+                  </TabsTrigger>
+                )}
+              </TabsList>
+            </div>
+
+            <TabsContent value="notes" className="flex-1 overflow-auto p-4 m-0">
+              <div className="space-y-6">
+                <LessonNotes
+                  content={lesson.content}
+                  keyTakeaways={lesson.keyTakeaways}
+                  commonMistakes={lesson.commonMistakes}
+                />
+                {lesson.keyTakeaways && lesson.keyTakeaways.length > 0 && (
+                  <KeyTakeawaysPanel
+                    takeaways={lesson.keyTakeaways}
+                    onQuizMe={handleQuizMe}
+                  />
+                )}
+              </div>
+            </TabsContent>
+
+            {lesson.examples && lesson.examples.length > 0 && (
+              <TabsContent value="examples" className="flex-1 overflow-auto p-4 m-0">
+                <ExampleCarousel
+                  examples={lesson.examples}
+                  onLoadExample={handleLoadExample}
+                  onAskAI={handleExplainCode}
+                />
+              </TabsContent>
+            )}
+
+            {lesson.type !== "theory" && (
+              <TabsContent value="practice" className="flex-1 overflow-auto p-4 m-0">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Practice Challenge</h3>
+                  <p className="text-muted-foreground">
+                    Use the code editor on the right to complete this challenge.
+                    Run your code to test it, then submit when ready.
+                  </p>
+                  {selectedCode && (
+                    <AICodeExplainer
+                      selectedCode={selectedCode}
+                      lessonContext={lesson.content}
+                      onExplain={handleExplainCode}
+                    />
+                  )}
+                </div>
+              </TabsContent>
+            )}
+          </Tabs>
         </div>
 
         {/* Right Panel - Editor & Output */}
         <div className={`${mobileView === "editor" ? "flex" : "hidden"} md:flex w-full md:w-1/2 flex-col flex-1`}>
           {/* Code Editor */}
-          <div className="flex-1 border-b border-border min-h-[200px] md:min-h-0 flex flex-col">
-            <div className="border-b border-border bg-muted/30 p-2">
-              <EditorControls
-                fontSize={fontSize}
-                onFontSizeChange={setFontSize}
-                theme={theme === "dark" ? "dark" : "light"}
-                onThemeChange={() => { }} // Theme is global, maybe we want local override? For now just display current.
-                wordWrap={wordWrap}
-                onWordWrapToggle={() => setWordWrap(!wordWrap)}
-              />
+          {lesson.type !== "theory" && (
+            <div className="flex-1 border-b border-border min-h-[200px] md:min-h-0 flex flex-col">
+              <div className="border-b border-border bg-muted/30 p-2">
+                <EditorControls
+                  fontSize={fontSize}
+                  onFontSizeChange={setFontSize}
+                  theme={theme === "dark" ? "dark" : "light"}
+                  onThemeChange={() => { }}
+                  wordWrap={wordWrap}
+                  onWordWrapToggle={() => setWordWrap(!wordWrap)}
+                />
+              </div>
+              <div className="flex-1">
+                <LazyMonacoEditor
+                  height="100%"
+                  language={lesson?.language?.toLowerCase() === "c++" ? "cpp" : lesson?.language?.toLowerCase() || "javascript"}
+                  theme={theme === "dark" ? "vs-dark" : "light"}
+                  value={code}
+                  onChange={(value) => setCode(value ?? "")}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: fontSize,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    padding: { top: 16 },
+                    scrollBeyondLastLine: false,
+                    wordWrap: wordWrap ? "on" : "off",
+                  }}
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <Editor
-                height="100%"
-                defaultLanguage="javascript"
-                language={lesson?.language?.toLowerCase() === "c++" ? "cpp" : lesson?.language?.toLowerCase() || "javascript"}
-                theme={theme === "dark" ? "vs-dark" : "light"}
-                value={code}
-                onChange={(value) => setCode(value ?? "")}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: fontSize,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  padding: { top: 16 },
-                  scrollBeyondLastLine: false,
-                  wordWrap: wordWrap ? "on" : "off",
-                }}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Output Panel */}
-          <div className="h-48 md:h-64 flex flex-col shrink-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <div className="border-b border-border px-4">
-                <TabsList className="bg-transparent">
-                  <TabsTrigger value="output">Output</TabsTrigger>
-                  {lesson.testCases && lesson.testCases.length > 0 && (
-                    <TabsTrigger value="tests">
-                      Tests
-                      {testResults.length > 0 && (
-                        <Badge
-                          variant={
-                            testResults.every((r) => r.passed)
-                              ? "success"
-                              : "destructive"
-                          }
-                          className="ml-2"
-                        >
-                          {testResults.filter((r) => r.passed).length}/
-                          {testResults.length}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
+          {lesson.type !== "theory" && (
+            <div className="h-48 md:h-64 flex flex-col shrink-0">
+              <Tabs value={activeEditorTab} onValueChange={setActiveEditorTab}>
+                <div className="border-b border-border px-4">
+                  <TabsList className="bg-transparent">
+                    <TabsTrigger value="output">Output</TabsTrigger>
+                    {lesson.testCases && lesson.testCases.length > 0 && (
+                      <TabsTrigger value="tests">
+                        Tests
+                        {testResults.length > 0 && (
+                          <Badge
+                            variant={
+                              testResults.every((r) => r.passed)
+                                ? "success"
+                                : "destructive"
+                            }
+                            className="ml-2"
+                          >
+                            {testResults.filter((r) => r.passed).length}/
+                            {testResults.length}
+                          </Badge>
+                        )}
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+                </div>
+
+                <TabsContent value="output" className="flex-1 p-4 m-0">
+                  <pre className="font-mono text-sm whitespace-pre-wrap">
+                    {output || "Run your code to see output"}
+                  </pre>
+                </TabsContent>
+
+                <TabsContent value="tests" className="flex-1 p-4 m-0 overflow-auto">
+                  {testResults.length > 0 ? (
+                    <EnhancedTestResults
+                      results={testResults}
+                      testCases={lesson.testCases || []}
+                    />
+                  ) : (
+                    <p className="text-muted-foreground">
+                      Run tests to see results
+                    </p>
                   )}
-                </TabsList>
-              </div>
-
-              <TabsContent value="output" className="flex-1 p-4 m-0">
-                <pre className="font-mono text-sm whitespace-pre-wrap">
-                  {output || "Run your code to see output"}
-                </pre>
-              </TabsContent>
-
-              <TabsContent value="tests" className="flex-1 p-4 m-0 overflow-auto">
-                {testResults.length > 0 ? (
-                  <EnhancedTestResults
-                    results={testResults}
-                    testCases={lesson.testCases || []}
-                  />
-                ) : (
-                  <p className="text-muted-foreground">
-                    Run tests to see results
-                  </p>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="border-t border-border p-4 flex items-center justify-between">
@@ -372,7 +460,7 @@ export default function LessonPlayer() {
                 {isRunning ? (
                   <span className="emoji-icon animate-spin">⏳</span>
                 ) : (
-                  <span className="emoji-icon">▶️</span>
+                  <Play className="w-4 h-4" />
                 )}
                 Run Code
               </Button>

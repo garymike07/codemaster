@@ -88,6 +88,122 @@ export default defineSchema({
     estimatedMinutes: v.optional(v.number()),
     language: v.optional(v.string()),
     order: v.number(),
+
+    // ENHANCED: Structured Notes Section
+    notes: v.optional(
+      v.object({
+        summary: v.string(),
+        detailedContent: v.optional(v.string()),
+        prerequisites: v.optional(v.array(v.string())),
+        learningObjectives: v.array(v.string()),
+        resources: v.optional(
+          v.array(
+            v.object({
+              title: v.string(),
+              url: v.string(),
+              type: v.union(
+                v.literal("video"),
+                v.literal("article"),
+                v.literal("docs"),
+                v.literal("tutorial")
+              ),
+            })
+          )
+        ),
+      })
+    ),
+
+    // ENHANCED: Multiple Examples with Variations
+    examples: v.optional(
+      v.array(
+        v.object({
+          id: v.optional(v.string()),
+          title: v.string(),
+          description: v.string(),
+          code: v.string(),
+          explanation: v.string(),
+          output: v.optional(v.string()),
+          difficulty: v.optional(
+            v.union(
+              v.literal("beginner"),
+              v.literal("intermediate"),
+              v.literal("advanced")
+            )
+          ),
+          concepts: v.optional(v.array(v.string())),
+          variations: v.optional(
+            v.array(
+              v.object({
+                name: v.string(),
+                code: v.string(),
+                description: v.string(),
+              })
+            )
+          ),
+        })
+      )
+    ),
+
+    // ENHANCED: Playground Configuration
+    playground: v.optional(
+      v.object({
+        enabled: v.boolean(),
+        starterCode: v.optional(v.string()),
+        language: v.optional(v.string()),
+        testCases: v.optional(
+          v.array(
+            v.object({
+              input: v.string(),
+              expectedOutput: v.string(),
+              description: v.string(),
+              isHidden: v.optional(v.boolean()),
+            })
+          )
+        ),
+        hints: v.optional(v.array(v.string())),
+        solution: v.optional(v.string()),
+        allowedImports: v.optional(v.array(v.string())),
+      })
+    ),
+
+    // Keep existing fields for backwards compatibility
+    keyTakeaways: v.optional(v.array(v.string())),
+    commonMistakes: v.optional(
+      v.array(
+        v.object({
+          mistake: v.string(),
+          explanation: v.string(),
+          howToAvoid: v.string(),
+        })
+      )
+    ),
+
+    // ENHANCED: AI Tutor Configuration per Lesson
+    aiConfig: v.optional(
+      v.object({
+        systemPrompt: v.optional(v.string()),
+        suggestedQuestions: v.optional(v.array(v.string())),
+        conceptExplanations: v.optional(v.any()),
+        tutorMode: v.optional(
+          v.union(
+            v.literal("socratic"),
+            v.literal("explain"),
+            v.literal("debug"),
+            v.literal("quiz")
+          )
+        ),
+      })
+    ),
+
+    // Legacy field - keep for backwards compatibility
+    aiPrompts: v.optional(
+      v.object({
+        explainCode: v.optional(v.string()),
+        suggestFix: v.optional(v.string()),
+        generateExample: v.optional(v.string()),
+        quizStudent: v.optional(v.string()),
+      })
+    ),
   })
     .index("by_module", ["moduleId"])
     .index("by_course", ["courseId"]),
@@ -362,4 +478,75 @@ export default defineSchema({
     .index("by_teacher", ["teacherId"])
     .index("by_exam", ["examId"])
     .index("by_student_status", ["studentId", "status"]),
+
+  // NEW: User Playground Sessions - Persist user code per lesson
+  playgroundSessions: defineTable({
+    userId: v.id("users"),
+    lessonId: v.id("lessons"),
+    code: v.string(),
+    savedAt: v.number(),
+    userNotes: v.optional(v.string()),
+    lastRunOutput: v.optional(v.string()),
+    testResults: v.optional(
+      v.array(
+        v.object({
+          passed: v.boolean(),
+          input: v.string(),
+          expected: v.string(),
+          actual: v.string(),
+        })
+      )
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_lesson", ["lessonId"])
+    .index("by_user_lesson", ["userId", "lessonId"]),
+
+  // NEW: AI Chat History - Persist chat conversations per lesson
+  aiChatHistory: defineTable({
+    userId: v.id("users"),
+    lessonId: v.id("lessons"),
+    messages: v.array(
+      v.object({
+        id: v.string(),
+        role: v.union(v.literal("user"), v.literal("assistant")),
+        content: v.string(),
+        timestamp: v.number(),
+        metadata: v.optional(
+          v.object({
+            codeContext: v.optional(v.string()),
+            tutorMode: v.optional(v.string()),
+          })
+        ),
+      })
+    ),
+    updatedAt: v.number(),
+    totalMessages: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_lesson", ["lessonId"])
+    .index("by_user_lesson", ["userId", "lessonId"]),
+
+  // NEW: User Personal Notes - User's own notes per lesson
+  userLessonNotes: defineTable({
+    userId: v.id("users"),
+    lessonId: v.id("lessons"),
+    content: v.string(),
+    highlights: v.optional(
+      v.array(
+        v.object({
+          text: v.string(),
+          color: v.optional(v.string()),
+          note: v.optional(v.string()),
+        })
+      )
+    ),
+    bookmarked: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_lesson", ["lessonId"])
+    .index("by_user_lesson", ["userId", "lessonId"])
+    .index("by_bookmarked", ["userId", "bookmarked"]),
 });

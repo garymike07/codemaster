@@ -12,14 +12,10 @@ import { MessagingPanel } from "@/components/messaging/MessagingPanel";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { ProgressCharts } from "@/components/ProgressCharts";
 
-const DEMO_ACTIVITY_DATA = [
-  { date: "2024-12-02", count: 3 },
-  { date: "2024-12-01", count: 5 },
-  { date: "2024-11-30", count: 2 },
-];
-
 export default function Dashboard() {
   const [showMessaging, setShowMessaging] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const { user } = useUser();
   const continuelearning = useQuery(api.enrollments.getContinueLearning);
@@ -27,12 +23,16 @@ export default function Dashboard() {
   const allProgress = useQuery(api.progress.getAllProgress);
   const courses = useQuery(api.courses.list);
   const seedCourses = useMutation(api.seed.seedCourses);
+  const resetAllProgress = useMutation(api.progress.resetAllProgress);
   const unreadCount = useQuery(api.messaging.getUnreadCount);
 
   // Gamification data
   const userStats = useQuery(api.gamification.getUserStats);
   const streak = useQuery(api.gamification.getStreak);
   const userBadges = useQuery(api.gamification.getUserBadges);
+
+  // Activity data for heatmap
+  const activityData = useQuery(api.progress.getActivityHeatmap, { days: 365 });
 
   const stats = {
     totalCourses: enrollments?.length ?? 0,
@@ -48,6 +48,18 @@ export default function Dashboard() {
 
   const handleSeed = async () => {
     await seedCourses();
+  };
+
+  const handleResetProgress = async () => {
+    setIsResetting(true);
+    try {
+      await resetAllProgress();
+      setShowResetConfirm(false);
+    } catch (error) {
+      console.error("Failed to reset progress:", error);
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const getLevelName = (level: number) => {
@@ -268,7 +280,7 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           <ActivityHeatmap
-            data={DEMO_ACTIVITY_DATA}
+            data={activityData ?? []}
             maxCount={10}
           />
         </CardContent>
@@ -423,6 +435,55 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Reset Progress Section */}
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <span className="emoji-icon">🔄</span>
+            Reset Learning Progress
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Start fresh by resetting all your learning progress. This will clear all completed lessons, 
+            playground sessions, AI chat history, and personal notes.
+          </p>
+          {!showResetConfirm ? (
+            <Button
+              variant="destructive"
+              onClick={() => setShowResetConfirm(true)}
+            >
+              🗑️ Reset All Progress
+            </Button>
+          ) : (
+            <div className="space-y-4 p-4 bg-destructive/10 rounded-lg border border-destructive/30">
+              <p className="text-sm font-medium text-destructive">
+                ⚠️ Are you sure? This action cannot be undone!
+              </p>
+              <p className="text-xs text-muted-foreground">
+                All your completed lessons, code sessions, AI conversations, and notes will be permanently deleted.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  onClick={handleResetProgress}
+                  disabled={isResetting}
+                >
+                  {isResetting ? "Resetting..." : "Yes, Reset Everything"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowResetConfirm(false)}
+                  disabled={isResetting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Messaging Panel */}
       <MessagingPanel

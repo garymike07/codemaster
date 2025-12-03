@@ -1,17 +1,30 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { useConvexAuth } from "convex/react";
-import Landing from "./pages/Landing";
-import Dashboard from "./pages/Dashboard";
-import Courses from "./pages/Courses";
-import CourseDetail from "./pages/CourseDetail";
-import LessonPlayer from "./pages/LessonPlayer";
-import Exams from "./pages/Exams";
-import ExamRunner from "./pages/ExamRunner";
-import ExamCentre from "./pages/ExamCentre";
-import ExamWorkspace from "./pages/ExamWorkspace";
-import Playground from "./pages/Playground";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
+
+// Lazy load pages for better initial load performance
+const Landing = lazy(() => import("./pages/Landing"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Courses = lazy(() => import("./pages/Courses"));
+const CourseDetail = lazy(() => import("./pages/CourseDetail"));
+const LessonPlayer = lazy(() => import("./pages/LessonPlayer"));
+const ModuleLearningHub = lazy(() => import("./pages/ModuleLearningHub"));
+const Exams = lazy(() => import("./pages/Exams"));
+const ExamRunner = lazy(() => import("./pages/ExamRunner"));
+const ExamCentre = lazy(() => import("./pages/ExamCentre"));
+const ExamWorkspace = lazy(() => import("./pages/ExamWorkspace"));
+const Playground = lazy(() => import("./pages/Playground"));
+
+// Loading spinner for lazy loaded components
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoading } = useConvexAuth();
@@ -36,8 +49,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<Landing />} />
       <Route
         path="/dashboard"
         element={
@@ -73,6 +87,14 @@ function App() {
         element={
           <ProtectedRoute>
             <LessonPlayer />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/module/:lessonId"
+        element={
+          <ProtectedRoute>
+            <ModuleLearningHub />
           </ProtectedRoute>
         }
       />
@@ -118,8 +140,9 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 

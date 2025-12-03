@@ -13,6 +13,31 @@ export const list = query({
   },
 });
 
+// Paginated course list for better performance
+export const listPaginated = query({
+  args: {
+    limit: v.optional(v.number()),
+    cursor: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 12;
+    
+    let query = ctx.db.query("courses");
+    
+    const courses = await query.take(limit + 1);
+    const publishedCourses = courses.filter((c) => c.isPublished !== false);
+    
+    const hasMore = publishedCourses.length > limit;
+    const items = hasMore ? publishedCourses.slice(0, limit) : publishedCourses;
+    
+    return {
+      items,
+      hasMore,
+      nextCursor: hasMore ? items[items.length - 1]?._id : null,
+    };
+  },
+});
+
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {

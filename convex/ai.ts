@@ -124,7 +124,7 @@ Requirements:
       });
 
       const responseText = completion.choices[0]?.message?.content || "";
-      
+
       // Clean up response - remove markdown code blocks if present
       let cleanedResponse = responseText.trim();
       if (cleanedResponse.startsWith("```json")) {
@@ -138,7 +138,7 @@ Requirements:
       cleanedResponse = cleanedResponse.trim();
 
       const parsed = JSON.parse(cleanedResponse) as { questions?: RawCodeQuestion[] };
-      
+
       // Validate and add IDs if missing
       const questions: CodeQuestion[] = (parsed.questions ?? []).map((q, index) => ({
         id: q.id || `q${index + 1}`,
@@ -223,7 +223,7 @@ Requirements:
       });
 
       const responseText = completion.choices[0]?.message?.content || "";
-      
+
       let cleanedResponse = responseText.trim();
       if (cleanedResponse.startsWith("```json")) {
         cleanedResponse = cleanedResponse.slice(7);
@@ -236,7 +236,7 @@ Requirements:
       cleanedResponse = cleanedResponse.trim();
 
       const parsed = JSON.parse(cleanedResponse) as { questions?: RawMultipleChoiceQuestion[] };
-      
+
       const questions: MultipleChoiceQuestion[] = (parsed.questions ?? []).map((q, index) => ({
         id: q.id || `mc${index + 1}`,
         type: "multiple_choice" as const,
@@ -316,3 +316,249 @@ STUDENT QUESTION: ${message}
     }
   },
 });
+
+// New AI actions for enhanced learning experience
+
+export const explainCode = action({
+  args: {
+    code: v.string(),
+    context: v.optional(v.string()),
+    simplify: v.optional(v.boolean()),
+  },
+  handler: async (_ctx, args) => {
+    const { code, context, simplify } = args;
+
+    const systemPrompt = simplify
+      ? `You are a patient coding tutor explaining code to beginners. Use simple English, avoid jargon, and use analogies when helpful.`
+      : `You are an expert coding instructor. Explain code clearly and thoroughly, covering what it does, how it works, and why it's written this way.`;
+
+    const userContent = `
+${context ? `LESSON CONTEXT:\n${context}\n\n` : ""}
+CODE TO EXPLAIN:
+\`\`\`
+${code}
+\`\`\`
+
+Please explain this code ${simplify ? "in very simple terms" : "in detail"}.
+${simplify ? "Imagine you're explaining to someone who just started learning programming." : "Include any important concepts, patterns, or best practices."}
+`;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      return {
+        success: true,
+        explanation: completion.choices[0]?.message?.content || "I couldn't explain this code.",
+      };
+    } catch (error: unknown) {
+      console.error("AI Explain Error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to explain code",
+      };
+    }
+  },
+});
+
+export const suggestFix = action({
+  args: {
+    code: v.string(),
+    error: v.string(),
+    context: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const { code, error, context } = args;
+
+    const systemPrompt = `You are a helpful debugging assistant. When a student has an error:
+1. Explain what the error means in simple terms
+2. Point out the specific line or part causing the issue
+3. Suggest how to fix it (give hints, not just the solution)
+4. Explain why this error happened to help them learn`;
+
+    const userContent = `
+${context ? `LESSON CONTEXT:\n${context}\n\n` : ""}
+STUDENT'S CODE:
+\`\`\`
+${code}
+\`\`\`
+
+ERROR MESSAGE:
+${error}
+
+Please help the student understand and fix this error.
+`;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.7,
+        max_tokens: 800,
+      });
+
+      return {
+        success: true,
+        suggestion: completion.choices[0]?.message?.content || "I couldn't suggest a fix.",
+      };
+    } catch (error: unknown) {
+      console.error("AI Suggest Fix Error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to suggest fix",
+      };
+    }
+  },
+});
+
+export const generateExample = action({
+  args: {
+    topic: v.string(),
+    language: v.string(),
+    difficulty: v.optional(v.union(
+      v.literal("beginner"),
+      v.literal("intermediate"),
+      v.literal("advanced")
+    )),
+    context: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const { topic, language, difficulty = "beginner", context } = args;
+
+    const systemPrompt = `You are a coding instructor creating practical examples. Generate clear, working code examples that demonstrate concepts effectively.`;
+
+    const userContent = `
+${context ? `LESSON CONTEXT:\n${context}\n\n` : ""}
+Generate a ${difficulty} level example for: ${topic}
+Language: ${language}
+
+Return a JSON object with this structure:
+{
+  "title": "Brief example title",
+  "description": "What this example demonstrates",
+  "code": "Complete working code",
+  "explanation": "Step-by-step explanation of the code",
+  "output": "Expected output when run"
+}
+`;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.8,
+        max_tokens: 1500,
+      });
+
+      const responseText = completion.choices[0]?.message?.content || "";
+      let cleanedResponse = responseText.trim();
+
+      if (cleanedResponse.startsWith("```json")) {
+        cleanedResponse = cleanedResponse.slice(7);
+      } else if (cleanedResponse.startsWith("```")) {
+        cleanedResponse = cleanedResponse.slice(3);
+      }
+      if (cleanedResponse.endsWith("```")) {
+        cleanedResponse = cleanedResponse.slice(0, -3);
+      }
+      cleanedResponse = cleanedResponse.trim();
+
+      const example = JSON.parse(cleanedResponse);
+
+      return {
+        success: true,
+        example,
+      };
+    } catch (error: unknown) {
+      console.error("AI Generate Example Error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to generate example",
+      };
+    }
+  },
+});
+
+export const quizStudent = action({
+  args: {
+    topic: v.string(),
+    context: v.string(),
+    questionCount: v.optional(v.number()),
+  },
+  handler: async (_ctx, args) => {
+    const { topic, context, questionCount = 3 } = args;
+
+    const systemPrompt = `You are a quiz generator. Create questions that test understanding, not just memorization.`;
+
+    const userContent = `
+Based on this lesson content:
+${context}
+
+Generate ${questionCount} quiz questions about: ${topic}
+
+Return JSON:
+{
+  "questions": [
+    {
+      "question": "Question text",
+      "options": ["A", "B", "C", "D"],
+      "correctAnswer": "A",
+      "explanation": "Why this is correct"
+    }
+  ]
+}
+`;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.7,
+        max_tokens: 1500,
+      });
+
+      const responseText = completion.choices[0]?.message?.content || "";
+      let cleanedResponse = responseText.trim();
+
+      if (cleanedResponse.startsWith("```json")) {
+        cleanedResponse = cleanedResponse.slice(7);
+      } else if (cleanedResponse.startsWith("```")) {
+        cleanedResponse = cleanedResponse.slice(3);
+      }
+      if (cleanedResponse.endsWith("```")) {
+        cleanedResponse = cleanedResponse.slice(0, -3);
+      }
+      cleanedResponse = cleanedResponse.trim();
+
+      const quiz = JSON.parse(cleanedResponse);
+
+      return {
+        success: true,
+        questions: quiz.questions || [],
+      };
+    } catch (error: unknown) {
+      console.error("AI Quiz Error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to generate quiz",
+      };
+    }
+  },
+});
+

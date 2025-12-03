@@ -362,26 +362,23 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <Logo className="mb-4" />
-              <p className="text-muted-foreground max-w-sm font-sans">
+              <p className="footer-text text-muted-foreground max-w-sm">
                 Empowering the <span className="text-lime font-medium">next generation</span> of developers with{" "}
                 <span className="text-sky">interactive learning</span>,
                 expert-crafted courses, and real-world projects.
               </p>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4 font-display text-coral"><span className="emoji-icon">📬</span> Contact Us</h4>
-              <ul className="space-y-3 text-sm text-muted-foreground">
+            <div className="footer-text">
+              <p className="font-semibold mb-3 text-coral uppercase tracking-wide">📬 Contact Us</p>
+              <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-center gap-2 hover:text-primary transition-colors">
-                  <span className="text-lg emoji-icon">📞</span>
-                  <a href="tel:0792618156">0792618156</a>
+                  📞 <a href="tel:0792618156">0792618156</a>
                 </li>
                 <li className="flex items-center gap-2 hover:text-primary transition-colors">
-                  <span className="text-lg emoji-icon">📧</span>
-                  <a href="mailto:wrootmike@gmail.com">wrootmike@gmail.com</a>
+                  📧 <a href="mailto:wrootmike@gmail.com">wrootmike@gmail.com</a>
                 </li>
                 <li className="flex items-center gap-2 hover:text-primary transition-colors">
-                  <span className="text-lg emoji-icon">🔗</span>
-                  <a
+                  🔗 <a
                     href="https://www.linkedin.com/in/mike-waitindi-654bb2344/"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -391,22 +388,22 @@ export default function Landing() {
                 </li>
               </ul>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4 font-display text-violet"><span className="emoji-icon">📜</span> Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground font-sans">
+            <div className="footer-text">
+              <p className="font-semibold mb-3 text-violet uppercase tracking-wide">📜 Legal</p>
+              <ul className="space-y-2 text-muted-foreground">
                 <li><a href="#" className="hover:text-mint transition-colors">Privacy Policy</a></li>
                 <li><a href="#" className="hover:text-mint transition-colors">Terms of Service</a></li>
                 <li><a href="#" className="hover:text-mint transition-colors">Cookie Policy</a></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground font-sans">
-              © {new Date().getFullYear()} <span className="font-heading text-foreground">CodeMaster</span>. All rights reserved.
+          <div className="footer-text border-t border-border pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-muted-foreground">
+              © {new Date().getFullYear()} <span className="text-foreground">CodeMaster</span>. All rights reserved.
             </p>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Powered by</span>
-              <LinkBridgeLogo size="md" />
+              <span className="text-muted-foreground">Powered by</span>
+              <LinkBridgeLogo size="sm" />
             </div>
           </div>
         </div>

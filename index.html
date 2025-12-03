@@ -7,21 +7,35 @@
     <title>CodeMaster - Learn to Code</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      // CRITICAL: Prevent AMD/UMD module conflicts between Monaco and Clerk
+      // Save and remove any existing AMD define before loading anything
+      (function() {
+        var _define = window.define;
+        var _require = window.require;
+        
+        // Clear AMD globals to prevent conflicts
+        if (typeof window.define === 'function' && window.define.amd) {
+          window.__amd_define_backup = window.define;
+          window.__amd_require_backup = window.require;
+          delete window.define;
+          delete window.require;
+        }
+        
+        // Monaco worker configuration
+        window.MonacoEnvironment = {
+          getWorkerUrl: function (moduleId, label) {
+            return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+              self.MonacoEnvironment = { baseUrl: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/' };
+              importScripts('https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/base/worker/workerMain.js');
+            `)}`;
+          }
+        };
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      // Prevent Monaco AMD loader from conflicting with other scripts
-      window.MonacoEnvironment = {
-        getWorkerUrl: function (moduleId, label) {
-          return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
-            self.MonacoEnvironment = { baseUrl: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/' };
-            importScripts('https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/base/worker/workerMain.js');
-          `)}`;
-        }
-      };
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

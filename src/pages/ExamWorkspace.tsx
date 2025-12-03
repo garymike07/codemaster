@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import Editor from "@monaco-editor/react";
+import { LazyMonacoEditor } from "@/components/LazyMonacoEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -473,7 +473,7 @@ export default function ExamWorkspace() {
                 {question.type === "code" && (
                   <div className="space-y-4">
                     <div className="border rounded-md overflow-hidden">
-                      <Editor
+                      <LazyMonacoEditor
                         height="300px"
                         className="md:h-[400px]"
                         language="javascript"
