@@ -25,7 +25,9 @@ import {
   CheckCircle2,
   Circle,
   Play,
+  FileText,
 } from "lucide-react";
+import { isExecutableLanguage } from "@/lib/languageSupport";
 
 export default function ModuleLearningHub() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -76,6 +78,9 @@ export default function ModuleLearningHub() {
   useEffect(() => {
     setPlaygroundCode(initialCode);
   }, [initialCode]);
+
+  // Check if this lesson's language supports code execution
+  const canExecuteCode = isExecutableLanguage(lesson?.language);
 
   if (!lesson) {
     return (
@@ -212,7 +217,7 @@ export default function ModuleLearningHub() {
                 <TabsTrigger
                   value="playground"
                   className="gap-2"
-                  disabled={lesson.type === "theory"}
+                  disabled={lesson.type === "theory" || !canExecuteCode}
                 >
                   <Code2 className="w-4 h-4" />
                   <span className="hidden sm:inline">Playground</span>
@@ -251,7 +256,7 @@ export default function ModuleLearningHub() {
               </TabsContent>
 
               <TabsContent value="playground" className="mt-0">
-                {lesson.type !== "theory" ? (
+                {lesson.type !== "theory" && canExecuteCode ? (
                   <Card className="h-[600px] overflow-hidden">
                     <EnhancedPlayground
                       lessonId={lesson._id}
@@ -262,6 +267,18 @@ export default function ModuleLearningHub() {
                       onRunTests={handleRunTests}
                       onAskAI={(question, code) => handleExplainCode(code)}
                     />
+                  </Card>
+                ) : !canExecuteCode ? (
+                  <Card className="p-8 text-center">
+                    <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Notes-Only Mode</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      Code execution is not available for {lesson.language || "this language"}. 
+                      Focus on the lesson notes and examples to learn the concepts.
+                    </p>
+                    <Badge variant="secondary" className="mt-4 capitalize">
+                      {lesson.language || "Unknown"} - Read & Learn
+                    </Badge>
                   </Card>
                 ) : (
                   <Card className="p-8 text-center">
