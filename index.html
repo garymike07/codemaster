@@ -9,19 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script>
       // CRITICAL: Prevent AMD/UMD module conflicts between Monaco and Clerk
-      // Save and remove any existing AMD define before loading anything
       (function() {
-        var _define = window.define;
-        var _require = window.require;
-        
-        // Clear AMD globals to prevent conflicts
-        if (typeof window.define === 'function' && window.define.amd) {
-          window.__amd_define_backup = window.define;
-          window.__amd_require_backup = window.require;
-          delete window.define;
-          delete window.require;
-        }
-        
         // Monaco worker configuration
         window.MonacoEnvironment = {
           getWorkerUrl: function (moduleId, label) {
@@ -31,6 +19,20 @@
             `)}`;
           }
         };
+        
+        // Intercept and fix AMD define conflicts
+        // This runs BEFORE any scripts load
+        Object.defineProperty(window, 'define', {
+          get: function() { return this._define; },
+          set: function(val) {
+            this._define = val;
+            // When Monaco sets define.amd, mark it
+            if (val && val.amd) {
+              this._monacoDefine = val;
+            }
+          },
+          configurable: true
+        });
       })();
     </script>
   </head>
