@@ -1,16 +1,22 @@
 import { lazy, Suspense } from "react";
 
+// Singleton to ensure Monaco is only initialized once
+let monacoInitialized = false;
+
 // Lazy load Monaco Editor - don't import loader at top level to avoid AMD conflicts with Clerk
 const MonacoEditor = lazy(async () => {
   // Dynamically import the loader only when needed
   const { loader } = await import("@monaco-editor/react");
   
-  // Configure Monaco
-  loader.config({
-    paths: {
-      vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs",
-    },
-  });
+  // Configure Monaco only once to prevent duplicate module definitions
+  if (!monacoInitialized) {
+    loader.config({
+      paths: {
+        vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs",
+      },
+    });
+    monacoInitialized = true;
+  }
   
   // Return the Editor component
   const mod = await import("@monaco-editor/react");
