@@ -73,6 +73,20 @@ int main() {
     cout << greet("CodeMaster") << endl;
     return 0;
 }`,
+
+    csharp: `// C# Playground
+using System;
+
+class Program {
+    static void Main() {
+        Console.WriteLine("Hello, World!");
+        Console.WriteLine(Greet("CodeMaster"));
+    }
+    
+    static string Greet(string name) {
+        return $"Hello, {name}!";
+    }
+}`,
 };
 
 const getLanguageId = (language: keyof typeof LANGUAGE_TEMPLATES): number => {
@@ -82,6 +96,7 @@ const getLanguageId = (language: keyof typeof LANGUAGE_TEMPLATES): number => {
         typescript: 74,  // TypeScript (3.7.4)
         java: 62,        // Java (OpenJDK 13.0.1)
         cpp: 54,         // C++ (GCC 9.2.0)
+        csharp: 51,      // C# (Mono 6.6.0.161)
     };
     return languageMap[language];
 };
@@ -170,6 +185,7 @@ export default function Playground() {
             python: "py",
             java: "java",
             cpp: "cpp",
+            csharp: "cs",
         };
         const blob = new Blob([code], { type: "text/plain" });
         const url = URL.createObjectURL(blob);
@@ -213,6 +229,7 @@ export default function Playground() {
                                 <SelectContent>
                                     <SelectItem value="javascript">JavaScript</SelectItem>
                                     <SelectItem value="python">Python</SelectItem>
+                                    <SelectItem value="csharp">C#</SelectItem>
                                     <SelectItem value="typescript">TypeScript</SelectItem>
                                     <SelectItem value="java">Java</SelectItem>
                                     <SelectItem value="cpp">C++</SelectItem>

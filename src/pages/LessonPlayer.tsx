@@ -16,7 +16,8 @@ import { LessonNotes } from "@/components/LessonNotes";
 import { ExampleCarousel } from "@/components/ExampleCarousel";
 import { AICodeExplainer } from "@/components/AICodeExplainer";
 import { KeyTakeawaysPanel } from "@/components/KeyTakeawaysPanel";
-import { BookOpen, Code2, Lightbulb, Play } from "lucide-react";
+import { BookOpen, Code2, Lightbulb, Play, FileText } from "lucide-react";
+import { isExecutableLanguage, getJudge0LanguageId, getMonacoLanguage } from "@/lib/languageSupport";
 
 interface TestResult {
   passed: boolean;
@@ -46,7 +47,7 @@ export default function LessonPlayer() {
   const [activeMainTab, setActiveMainTab] = useState("notes");
   const [activeEditorTab, setActiveEditorTab] = useState("output");
   const [mobileView, setMobileView] = useState<"content" | "editor">("content");
-  const [selectedCode, setSelectedCode] = useState("");
+  const [selectedCode] = useState("");
 
   // Editor State
   const [fontSize, setFontSize] = useState(14);
@@ -54,7 +55,6 @@ export default function LessonPlayer() {
 
   // AI Actions
   const explainCodeAction = useAction(api.ai.explainCode);
-  const generateExampleAction = useAction(api.ai.generateExample);
   const quizStudentAction = useAction(api.ai.quizStudent);
 
   useKeyboardShortcut({
@@ -79,26 +79,8 @@ export default function LessonPlayer() {
     );
   }
 
-  const getLanguageId = (language?: string) => {
-    switch (language?.toLowerCase()) {
-      case "cpp":
-      case "c++":
-        return 54;
-      case "java":
-        return 62;
-      case "python":
-        return 71;
-      case "c":
-        return 50;
-      case "c#":
-      case "csharp":
-        return 51;
-      case "javascript":
-      case "js":
-      default:
-        return 63;
-    }
-  };
+  // Check if this lesson's language supports code execution
+  const canExecuteCode = isExecutableLanguage(lesson?.language);
 
   const runCode = async () => {
     setIsRunning(true);
@@ -118,7 +100,7 @@ export default function LessonPlayer() {
           },
           body: JSON.stringify({
             source_code: btoa(code),
-            language_id: getLanguageId(lesson?.language),
+            language_id: getJudge0LanguageId(lesson?.language),
           }),
         }
       );
@@ -166,7 +148,7 @@ export default function LessonPlayer() {
             },
             body: JSON.stringify({
               source_code: btoa(code),
-              language_id: getLanguageId(lesson?.language),
+              language_id: getJudge0LanguageId(lesson?.language),
               stdin: testCase.input ? btoa(testCase.input) : undefined,
             }),
           }
@@ -195,7 +177,8 @@ export default function LessonPlayer() {
   };
 
   const handleSubmit = async () => {
-    if (lesson.type === "theory") {
+    // For theory lessons or non-executable languages, just mark complete
+    if (lesson.type === "theory" || !canExecuteCode) {
       await markComplete({ lessonId: lesson._id });
       navigateToNextLesson();
       return;
@@ -307,7 +290,7 @@ export default function LessonPlayer() {
                     <Badge variant="secondary" className="ml-1">{lesson.examples.length}</Badge>
                   </TabsTrigger>
                 )}
-                {lesson.type !== "theory" && (
+                {lesson.type !== "theory" && canExecuteCode && (
                   <TabsTrigger value="practice" className="gap-2">
                     <Code2 className="w-4 h-4" />
                     <span className="hidden sm:inline">Practice</span>
@@ -342,7 +325,7 @@ export default function LessonPlayer() {
               </TabsContent>
             )}
 
-            {lesson.type !== "theory" && (
+            {lesson.type !== "theory" && canExecuteCode && (
               <TabsContent value="practice" className="flex-1 overflow-auto p-4 m-0">
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Practice Challenge</h3>
@@ -363,10 +346,25 @@ export default function LessonPlayer() {
           </Tabs>
         </div>
 
-        {/* Right Panel - Editor & Output */}
+        {/* Right Panel - Editor & Output (or Notes-only for non-executable languages) */}
         <div className={`${mobileView === "editor" ? "flex" : "hidden"} md:flex w-full md:w-1/2 flex-col flex-1`}>
-          {/* Code Editor */}
-          {lesson.type !== "theory" && (
+          {/* Notes-only mode for non-executable languages */}
+          {!canExecuteCode && lesson.type !== "theory" && (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <FileText className="w-16 h-16 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Notes-Only Mode</h3>
+              <p className="text-muted-foreground max-w-md mb-4">
+                Code execution is not available for {lesson.language || "this language"}. 
+                Focus on the lesson notes and examples to learn the concepts.
+              </p>
+              <Badge variant="secondary" className="capitalize">
+                {lesson.language || "Unknown"} - Read & Learn
+              </Badge>
+            </div>
+          )}
+
+          {/* Code Editor - only for executable languages */}
+          {lesson.type !== "theory" && canExecuteCode && (
             <div className="flex-1 border-b border-border min-h-[200px] md:min-h-0 flex flex-col">
               <div className="border-b border-border bg-muted/30 p-2">
                 <EditorControls
@@ -381,7 +379,7 @@ export default function LessonPlayer() {
               <div className="flex-1">
                 <LazyMonacoEditor
                   height="100%"
-                  language={lesson?.language?.toLowerCase() === "c++" ? "cpp" : lesson?.language?.toLowerCase() || "javascript"}
+                  language={getMonacoLanguage(lesson?.language)}
                   theme={theme === "dark" ? "vs-dark" : "light"}
                   value={code}
                   onChange={(value) => setCode(value ?? "")}
@@ -398,8 +396,8 @@ export default function LessonPlayer() {
             </div>
           )}
 
-          {/* Output Panel */}
-          {lesson.type !== "theory" && (
+          {/* Output Panel - only for executable languages */}
+          {lesson.type !== "theory" && canExecuteCode && (
             <div className="h-48 md:h-64 flex flex-col shrink-0">
               <Tabs value={activeEditorTab} onValueChange={setActiveEditorTab}>
                 <div className="border-b border-border px-4">
@@ -450,7 +448,7 @@ export default function LessonPlayer() {
 
           {/* Action Buttons */}
           <div className="border-t border-border p-4 flex items-center justify-between">
-            {lesson.type !== "theory" && (
+            {lesson.type !== "theory" && canExecuteCode && (
               <Button
                 variant="outline"
                 onClick={runCode}
@@ -474,7 +472,7 @@ export default function LessonPlayer() {
                 <span className="emoji-icon animate-spin">⏳</span>
               ) : (
                 <>
-                  {lesson.type === "theory" ? "Mark as Complete" : "Submit & Continue"}
+                  {lesson.type === "theory" || !canExecuteCode ? "Mark as Complete" : "Submit & Continue"}
                   <span className="emoji-icon">→</span>
                 </>
               )}
