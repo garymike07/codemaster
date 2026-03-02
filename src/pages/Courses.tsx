@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CourseIcon } from "@/components/ui/course-icon";
+import { SignInButton, useUser } from "@clerk/clerk-react";
+import { Button } from "@/components/ui/button";
 
 const difficultyColors = {
   beginner: "bg-green-500/20 text-green-500",
@@ -13,6 +15,7 @@ const difficultyColors = {
 };
 
 export default function Courses() {
+  const { isSignedIn } = useUser();
   const courses = useQuery(api.courses.list);
   const enrollments = useQuery(api.enrollments.getMyEnrollments);
   const allProgress = useQuery(api.progress.getAllProgress);
@@ -94,10 +97,18 @@ export default function Courses() {
                       </div>
                     )}
 
-                    {!isEnrolled && (
+                    {!isEnrolled && isSignedIn && (
                       <div className="text-sm text-primary font-medium">
                         Start learning →
                       </div>
+                    )}
+
+                    {!isSignedIn && (
+                      <SignInButton mode="modal">
+                        <Button size="sm" variant="outline" className="w-full text-xs">
+                          🔑 Sign in to enroll
+                        </Button>
+                      </SignInButton>
                     )}
                   </div>
                 </CardContent>
