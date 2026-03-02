@@ -214,10 +214,18 @@ export default function ModuleLearningHub() {
                     </Badge>
                   )}
                 </TabsTrigger>
+                {/* Fix #19: Add tooltip to disabled playground tab explaining why it's disabled */}
                 <TabsTrigger
                   value="playground"
                   className="gap-2"
                   disabled={lesson.type === "theory" || !canExecuteCode}
+                  title={
+                    lesson.type === "theory"
+                      ? "Not available for theory lessons"
+                      : !canExecuteCode
+                      ? `Language not supported for execution: ${lesson.language || "unknown"}`
+                      : undefined
+                  }
                 >
                   <Code2 className="w-4 h-4" />
                   <span className="hidden sm:inline">Playground</span>

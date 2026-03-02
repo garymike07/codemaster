@@ -25,6 +25,7 @@ export default function ExamRunner() {
   const [startedAt] = useState(() => Date.now());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{
     score: number;
     percentageScore: number;
@@ -41,22 +42,31 @@ export default function ExamRunner() {
   }, [exam]);
 
   const handleSubmit = useCallback(async () => {
-    if (!exam) return;
+    // Fix #7: Guard against multiple simultaneous submissions
+    if (!exam || isSubmitting) return;
 
-    const submissionAnswers = exam.questions.map((q) => ({
-      questionId: q.id,
-      answer: answers[q.id] ?? "",
-    }));
+    setIsSubmitting(true);
+    try {
+      const submissionAnswers = exam.questions.map((q) => ({
+        questionId: q.id,
+        answer: answers[q.id] ?? "",
+      }));
 
-    const submissionResult = await submitExam({
-      examId: exam._id,
-      answers: submissionAnswers,
-      startedAt,
-    });
+      const submissionResult = await submitExam({
+        examId: exam._id,
+        answers: submissionAnswers,
+        startedAt,
+      });
 
-    setResult(submissionResult);
-    setIsSubmitted(true);
-  }, [answers, exam, startedAt, submitExam]);
+      setResult(submissionResult);
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error("Submit error:", error);
+      alert("Failed to submit exam. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [answers, exam, startedAt, submitExam, isSubmitting]);
 
   useEffect(() => {
     if (timeLeft === null || timeLeft <= 0 || isSubmitted) return;
@@ -64,7 +74,8 @@ export default function ExamRunner() {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev === null || prev <= 1) {
-          handleSubmit();
+          // Fix #7: Only trigger submit if not already submitting
+          if (!isSubmitting) handleSubmit();
           return 0;
         }
         return prev - 1;
@@ -72,7 +83,7 @@ export default function ExamRunner() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isSubmitted, handleSubmit]);
+  }, [timeLeft, isSubmitted, isSubmitting, handleSubmit]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

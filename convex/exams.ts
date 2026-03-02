@@ -16,7 +16,8 @@ export const list = query({
     const examsWithCourses = await Promise.all(
       exams.map(async (exam) => {
         const courseId = exam.courseId as Id<"courses">;
-        const course = typeof exam.courseId === "string" && !exam.courseId.startsWith("k")
+        // Fix #17: Replace fragile startsWith("k") check with proper type check
+        const course = typeof exam.courseId === "string"
           ? null
           : await ctx.db.get(courseId);
         return { ...exam, course };
@@ -34,7 +35,8 @@ export const getById = query({
     if (!exam) return null;
 
     const courseId = exam.courseId as Id<"courses">;
-    const course = typeof exam.courseId === "string" && !exam.courseId.startsWith("k")
+    // Fix #17: Replace fragile startsWith("k") check with proper type check
+    const course = typeof exam.courseId === "string"
       ? null
       : await ctx.db.get(courseId);
     return { ...exam, course };
@@ -152,7 +154,8 @@ export const getMySubmissions = query({
         let course: Awaited<ReturnType<typeof ctx.db.get>> | null = null;
         if (exam) {
           const courseId = exam.courseId as Id<"courses">;
-          if (typeof exam.courseId !== "string" || exam.courseId.startsWith("k")) {
+          // Fix #17: Replace fragile startsWith("k") check with proper type check
+          if (typeof exam.courseId !== "string") {
             course = await ctx.db.get(courseId);
           }
         }
@@ -174,7 +177,8 @@ export const getSubmission = query({
     let course: Awaited<ReturnType<typeof ctx.db.get>> | null = null;
     if (exam) {
       const courseId = exam.courseId as Id<"courses">;
-      if (typeof exam.courseId !== "string" || exam.courseId.startsWith("k")) {
+      // Fix #17: Replace fragile startsWith("k") check with proper type check
+      if (typeof exam.courseId !== "string") {
         course = await ctx.db.get(courseId);
       }
     }

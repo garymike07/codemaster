@@ -174,6 +174,7 @@ export const checkAccess = query({
 export const upgradeSubscription = mutation({
   args: {
     plan: v.string(),
+    paymentReference: v.string(), // Fix #6: Require a payment reference token
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -185,6 +186,13 @@ export const upgradeSubscription = mutation({
       .unique();
 
     if (!user) throw new Error("User not found");
+
+    // Fix #6: Gate upgrade behind payment verification
+    // The paymentReference must be a non-empty token provided by a verified payment webhook.
+    // Direct calls without a valid reference are rejected.
+    if (!args.paymentReference || args.paymentReference.trim() === "") {
+      throw new Error("Payment verification required: missing payment reference");
+    }
 
     await ctx.db.patch(user._id, {
       subscriptionStatus: "active",

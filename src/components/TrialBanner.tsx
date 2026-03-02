@@ -1,4 +1,5 @@
 import { Clock, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,10 @@ interface TrialBannerProps {
 
 export function TrialBanner({ onUpgrade }: TrialBannerProps) {
   const { isLoading, status, daysRemaining, isTrialActive, isExpired } = useSubscription();
+  const navigate = useNavigate();
+
+  // Fix #5: Use correct route — navigate to /upgrade instead of /pricing
+  const handleUpgrade = onUpgrade ?? (() => navigate("/upgrade"));
 
   if (isLoading) return null;
 
@@ -31,7 +36,7 @@ export function TrialBanner({ onUpgrade }: TrialBannerProps) {
               </p>
             </div>
           </div>
-          <Button onClick={onUpgrade} variant="destructive" size="sm">
+          <Button onClick={handleUpgrade} variant="destructive" size="sm">
             Upgrade Now
           </Button>
         </div>
@@ -74,7 +79,7 @@ export function TrialBanner({ onUpgrade }: TrialBannerProps) {
             </div>
           </div>
           <Button 
-            onClick={onUpgrade} 
+            onClick={handleUpgrade} 
             variant={isUrgent ? "default" : "outline"} 
             size="sm"
           >

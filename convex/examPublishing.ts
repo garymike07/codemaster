@@ -227,6 +227,10 @@ export const saveProgress = mutation({
       .first();
     if (!user) throw new Error("User not found");
 
+    // Fix #3: Validate exam exists before saving progress
+    const exam = await ctx.db.get(args.examId);
+    if (!exam) throw new Error("Exam not found");
+
     // Check for existing submission
     const existingSubmission = await ctx.db
       .query("examSubmissions")

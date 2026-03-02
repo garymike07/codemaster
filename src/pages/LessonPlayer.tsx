@@ -123,10 +123,11 @@ export default function LessonPlayer() {
     }
   };
 
-  const runTests = async () => {
+  // Fix #2: runTests returns results directly so handleSubmit doesn't rely on stale state
+  const runTests = async (): Promise<TestResult[]> => {
     if (!lesson.testCases || lesson.testCases.length === 0) {
       await runCode();
-      return;
+      return [];
     }
 
     setIsRunning(true);
@@ -174,6 +175,7 @@ export default function LessonPlayer() {
 
     setTestResults(results);
     setIsRunning(false);
+    return results;
   };
 
   const handleSubmit = async () => {
@@ -184,9 +186,10 @@ export default function LessonPlayer() {
       return;
     }
 
-    await runTests();
-
-    const allPassed = testResults.length === 0 || testResults.every((r) => r.passed);
+    // Fix #2: runTests now returns results directly — don't rely on stale state
+    const freshResults = await runTests();
+    const results = freshResults ?? testResults;
+    const allPassed = results.length === 0 || results.every((r) => r.passed);
 
     if (allPassed) {
       await markComplete({ lessonId: lesson._id });
@@ -198,11 +201,12 @@ export default function LessonPlayer() {
     if (!courseLessons || !lesson) return;
 
     const currentIndex = courseLessons.findIndex((l) => l._id === lesson._id);
+    // Fix #15: Show completion feedback on last lesson instead of silently returning
     if (currentIndex !== -1 && currentIndex < courseLessons.length - 1) {
       const nextLesson = courseLessons[currentIndex + 1];
       navigate(`/lesson/${nextLesson._id}`);
     } else {
-      navigate(`/course/${lesson.courseId}`);
+      navigate(`/course/${lesson.courseId}?completed=true`);
     }
   };
 

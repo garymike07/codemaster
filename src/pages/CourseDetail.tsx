@@ -62,7 +62,13 @@ export default function CourseDetail() {
   const completedLessonIds = new Set(progressData?.map((p) => p.lessonId) ?? []);
 
   const handleEnroll = async () => {
-    await enroll({ courseId: course._id });
+    // Fix #16: Add error handling and user feedback for enrollment failures
+    try {
+      await enroll({ courseId: course._id });
+    } catch (error) {
+      console.error("Enrollment failed:", error);
+      alert("Failed to enroll. Please try again.");
+    }
   };
 
   const getFirstLesson = () => {
@@ -76,7 +82,7 @@ export default function CourseDetail() {
     if (!courseWithModules?.modules) return getFirstLesson();
     
     for (const module of courseWithModules.modules) {
-      for (const lesson of module.lessons) {
+      for (const lesson of (module.lessons ?? [])) {
         if (!completedLessonIds.has(lesson._id)) {
           return lesson;
         }
@@ -191,13 +197,15 @@ export default function CourseDetail() {
                     </span>
                     <span className="font-medium">{module.title}</span>
                     <Badge variant="secondary" className="ml-2">
-                      {module.lessons.length} lessons
+                      {/* Fix #10: Null-safe access to module.lessons */}
+                      {(module.lessons ?? []).length} lessons
                     </Badge>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-1 pb-2">
-                    {module.lessons.map((lesson) => {
+                    {/* Fix #10: Null-safe access to module.lessons */}
+                    {(module.lessons ?? []).map((lesson) => {
                       const isCompleted = completedLessonIds.has(lesson._id);
                       return (
                         <Link

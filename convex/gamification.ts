@@ -16,11 +16,19 @@ const LEVEL_THRESHOLDS = [
   44000, 50500, 57500, 65000, 73000, 82000, 92000, 103000, 115000, 128000
 ];
 
+// Fix #21: Define MAX_LEVEL as the total number of defined thresholds
+const MAX_LEVEL = LEVEL_THRESHOLDS.length;
+
 function calculateLevel(xp: number): number {
+  let calculatedLevel = 1;
   for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (xp >= LEVEL_THRESHOLDS[i]) return i + 1;
+    if (xp >= LEVEL_THRESHOLDS[i]) {
+      calculatedLevel = i + 1;
+      break;
+    }
   }
-  return 1;
+  // Fix #21: Cap at MAX_LEVEL to prevent out-of-bounds / undefined level
+  return Math.min(calculatedLevel, MAX_LEVEL);
 }
 
 function getXpForNextLevel(currentXp: number): { current: number; next: number; progress: number } {

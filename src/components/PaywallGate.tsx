@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useHasAccess } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 
@@ -63,6 +64,7 @@ interface RequireAccessProps {
 
 export function RequireAccess({ children, feature }: RequireAccessProps) {
   const { isLoading, hasAccess } = useHasAccess(feature);
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -83,7 +85,8 @@ export function RequireAccess({ children, feature }: RequireAccessProps) {
           <p className="text-muted-foreground mb-6">
             You need an active subscription to access this page.
           </p>
-          <Button size="lg">
+          {/* Fix #14: Add onClick handler to "View Pricing" button */}
+          <Button size="lg" onClick={() => navigate("/upgrade")}>
             View Pricing
           </Button>
         </div>

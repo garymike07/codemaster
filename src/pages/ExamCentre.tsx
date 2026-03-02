@@ -120,6 +120,11 @@ export default function ExamCentre() {
         questionCount: 3,
       });
 
+      // Fix #11: Validate AI result before using it
+      if (!result || !Array.isArray(result.questions) || result.questions.length === 0) {
+        alert("Failed to generate questions: " + (result?.error || "Unknown error"));
+        return;
+      }
       if (result.success && result.questions.length > 0) {
         // Map the questions to ensure strict type compatibility
         // The AI action returns questions with minimal fields, createPracticeExam expects specific shape
@@ -148,8 +153,10 @@ export default function ExamCentre() {
         alert("Failed to generate questions: " + (result.error || "Unknown error"));
       }
     } catch (error) {
+      // Fix #13: Show specific error message instead of generic one
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
       console.error(error);
-      alert("Something went wrong generating the exam.");
+      alert(`Failed to generate exam: ${errorMsg}`);
     } finally {
       setIsGenerating(false);
     }

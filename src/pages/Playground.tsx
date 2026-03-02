@@ -127,6 +127,12 @@ export default function Playground() {
     };
 
     const handleRun = async () => {
+        // Fix #12: Validate Judge0 env vars before attempting execution
+        if (!import.meta.env.VITE_JUDGE0_API_URL || !import.meta.env.VITE_JUDGE0_API_KEY) {
+            setError("Code execution is not configured. Please contact support.");
+            return;
+        }
+
         setIsRunning(true);
         setOutput("");
         setError(null);
@@ -196,10 +202,8 @@ export default function Playground() {
         URL.revokeObjectURL(url);
     };
 
-    const handleShare = () => {
-        // In a real app, this would generate a shareable link
-        alert("Share functionality coming soon!");
-    };
+    // Fix #18: Share button is disabled (coming soon) instead of showing an alert
+    const handleShare = undefined;
 
     return (
         <div className="min-h-screen bg-background">
@@ -266,9 +270,10 @@ export default function Playground() {
                                         <Download className="w-4 h-4 mr-2" />
                                         Download
                                     </Button>
-                                    <Button size="sm" variant="ghost" onClick={handleShare}>
+                                    {/* Fix #18: Disable Share button (coming soon) instead of alert */}
+                                    <Button size="sm" variant="ghost" disabled title="Share functionality coming soon">
                                         <Share2 className="w-4 h-4 mr-2" />
-                                        Share
+                                        Share (Soon)
                                     </Button>
                                 </div>
                             </div>

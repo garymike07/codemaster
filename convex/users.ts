@@ -74,6 +74,18 @@ export const updateRole = mutation({
     role: v.union(v.literal("student"), v.literal("teacher")),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    // Only allow admins (teachers) to change roles
+    const caller = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+    if (!caller || caller.role !== "teacher") {
+      throw new Error("Forbidden: only teachers can update roles");
+    }
+
     await ctx.db.patch(args.userId, { role: args.role });
   },
 });

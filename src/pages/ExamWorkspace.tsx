@@ -115,11 +115,17 @@ export default function ExamWorkspace() {
           questionId,
           answer,
         }));
-        await saveProgress({
-          examId: exam._id,
-          answers: answersArray,
-        });
-        setLastSaved(new Date());
+        // Fix #9: Wrap auto-save in try/catch to handle failures gracefully
+        try {
+          await saveProgress({
+            examId: exam._id,
+            answers: answersArray,
+          });
+          setLastSaved(new Date());
+        } catch (error) {
+          console.error("Auto-save failed:", error);
+          // Non-blocking: user continues working, will retry on next interval
+        }
       }
     }, 30000);
 
@@ -188,7 +194,24 @@ export default function ExamWorkspace() {
             },
             body: JSON.stringify({
               source_code: btoa(code),
-              language_id: 63, // JavaScript
+              // Fix #8: Map language dynamically instead of hardcoding JavaScript (63)
+              language_id: (() => {
+                const languageMap: Record<string, number> = {
+                  javascript: 63,
+                  python: 71,
+                  java: 62,
+                  cpp: 54,
+                  typescript: 74,
+                  csharp: 51,
+                  c: 50,
+                  ruby: 72,
+                  go: 60,
+                  rust: 73,
+                };
+                const q = exam?.questions[currentQuestion] as Question;
+                const lang = (q as { language?: string })?.language ?? "javascript";
+                return languageMap[lang.toLowerCase()] ?? 63;
+              })(),
               stdin: testCase.input ? btoa(testCase.input) : undefined,
             }),
           }

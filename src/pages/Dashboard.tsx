@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [showMessaging, setShowMessaging] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const { user } = useUser();
   const continuelearning = useQuery(api.enrollments.getContinueLearning);
@@ -46,8 +47,17 @@ export default function Dashboard() {
         : 0,
   };
 
+  // Fix #20: Add loading state and error handling to handleSeed
   const handleSeed = async () => {
-    await seedCourses();
+    setIsSeeding(true);
+    try {
+      await seedCourses();
+    } catch (e) {
+      console.error("Seeding failed:", e);
+      alert("Failed to seed courses. Please try again.");
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   const handleResetProgress = async () => {
@@ -83,7 +93,9 @@ export default function Dashboard() {
         </div>
         <div className="flex flex-wrap gap-2">
           {courses?.length === 0 && (
-            <Button onClick={handleSeed} size="sm">🌱 Seed Sample</Button>
+            <Button onClick={handleSeed} size="sm" disabled={isSeeding}>
+              {isSeeding ? "Seeding..." : "🌱 Seed Sample"}
+            </Button>
           )}
         </div>
       </div>
