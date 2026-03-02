@@ -4,11 +4,12 @@ import { v } from "convex/values";
 export default defineSchema({
   users: defineTable({
     clerkId: v.optional(v.string()),
-    email: v.string(),
-    name: v.string(),
-    role: v.union(v.literal("student"), v.literal("teacher")),
+    email: v.optional(v.string()),   // optional to support anonymous users
+    name: v.optional(v.string()),    // optional to support anonymous users
+    role: v.optional(v.union(v.literal("student"), v.literal("teacher"))),
     avatarUrl: v.optional(v.string()),
     createdAt: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()), // support anonymous user documents
     // Subscription fields
     trialStartedAt: v.optional(v.number()),
     trialEndsAt: v.optional(v.number()),
