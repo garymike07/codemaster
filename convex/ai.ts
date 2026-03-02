@@ -51,7 +51,8 @@ type MultipleChoiceQuestion = {
 };
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.CONVEX_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY,
+  baseURL: process.env.CONVEX_OPENAI_BASE_URL ?? undefined,
 });
 
 export const generateExamQuestions = action({
