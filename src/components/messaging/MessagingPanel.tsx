@@ -80,10 +80,10 @@ export function MessagingPanel({ isOpen, onClose }: MessagingPanelProps) {
                       onClick={() => handleSelectContact(contact._id)}
                     >
                       <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium">
-                        {contact.name.charAt(0).toUpperCase()}
+                        {(contact.name ?? "?").charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{contact.name}</p>
+                        <p className="text-sm font-medium truncate">{contact.name ?? "Unknown"}</p>
                         <p className="text-xs text-muted-foreground capitalize">{contact.role}</p>
                       </div>
                     </div>
