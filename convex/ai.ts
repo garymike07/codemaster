@@ -50,10 +50,18 @@ type MultipleChoiceQuestion = {
   explanation: string;
 };
 
-const openai = new OpenAI({
-  apiKey: process.env.CONVEX_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY,
-  baseURL: process.env.CONVEX_OPENAI_BASE_URL ?? undefined,
-});
+// Lazy OpenAI client — instantiated at call time so missing env vars
+// don't cause module-load failures during Convex deploy analysis.
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.CONVEX_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY,
+      baseURL: process.env.CONVEX_OPENAI_BASE_URL ?? undefined,
+    });
+  }
+  return _openai;
+}
 
 export const generateExamQuestions = action({
   args: {
@@ -108,7 +116,7 @@ Requirements:
 - Points: beginner=10-15, intermediate=15-25, advanced=25-30`;
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
@@ -207,7 +215,7 @@ Requirements:
 - Points: beginner=5-10, intermediate=10-15, advanced=15-20`;
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
@@ -293,7 +301,7 @@ STUDENT QUESTION: ${message}
 `;
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
@@ -345,7 +353,7 @@ ${simplify ? "Imagine you're explaining to someone who just started learning pro
 `;
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
@@ -398,7 +406,7 @@ Please help the student understand and fix this error.
 `;
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
@@ -454,7 +462,7 @@ Return a JSON object with this structure:
 `;
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
@@ -524,7 +532,7 @@ Return JSON:
 `;
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
