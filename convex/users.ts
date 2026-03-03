@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { TRIAL_DURATION_DAYS, MS_PER_DAY } from "./constants";
 
 export const getOrCreate = mutation({
   args: {
@@ -9,37 +10,44 @@ export const getOrCreate = mutation({
     avatarUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
-      .unique();
+    try {
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
+        .unique();
 
-    if (existing) {
-      await ctx.db.patch(existing._id, {
+      if (existing) {
+        // Bug #10: Only patch avatarUrl if it is actually provided
+        const updateData: { name: string; avatarUrl?: string } = { name: args.name };
+        if (args.avatarUrl !== undefined) {
+          updateData.avatarUrl = args.avatarUrl;
+        }
+        await ctx.db.patch(existing._id, updateData);
+        return existing._id;
+      }
+
+      const now = Date.now();
+
+      const userId = await ctx.db.insert("users", {
+        clerkId: args.clerkId,
+        email: args.email,
         name: args.name,
         avatarUrl: args.avatarUrl,
+        role: "student",
+        createdAt: now,
+        // Auto-start 30-day trial for new users
+        trialStartedAt: now,
+        trialEndsAt: now + TRIAL_DURATION_DAYS * MS_PER_DAY,
+        subscriptionStatus: "trial",
       });
-      return existing._id;
+
+      return userId;
+    } catch (error) {
+      console.error("Error in getOrCreate:", error);
+      throw new Error(
+        `Failed to create or update user: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
-
-    const now = Date.now();
-    const TRIAL_DURATION_DAYS = 30;
-    const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-    const userId = await ctx.db.insert("users", {
-      clerkId: args.clerkId,
-      email: args.email,
-      name: args.name,
-      avatarUrl: args.avatarUrl,
-      role: "student",
-      createdAt: now,
-      // Auto-start 30-day trial for new users
-      trialStartedAt: now,
-      trialEndsAt: now + (TRIAL_DURATION_DAYS * MS_PER_DAY),
-      subscriptionStatus: "trial",
-    });
-
-    return userId;
   },
 });
 
@@ -87,6 +95,10 @@ export const updateRole = mutation({
     }
 
     await ctx.db.patch(args.userId, { role: args.role });
+
+    // Bug #2: Return the updated user so the caller can confirm the change
+    const updatedUser = await ctx.db.get(args.userId);
+    return { success: true, newRole: updatedUser?.role };
   },
 });
 

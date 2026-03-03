@@ -1,8 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-
-const TRIAL_DURATION_DAYS = 30;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
+import { TRIAL_DURATION_DAYS, MS_PER_DAY } from "./constants";
 
 export const giveTrialToExistingUsers = mutation({
   args: {},

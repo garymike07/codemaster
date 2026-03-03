@@ -34,7 +34,16 @@ function calculateLevel(xp: number): number {
 function getXpForNextLevel(currentXp: number): { current: number; next: number; progress: number } {
   const level = calculateLevel(currentXp);
   const currentThreshold = LEVEL_THRESHOLDS[level - 1] || 0;
-  const nextThreshold = LEVEL_THRESHOLDS[level] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+
+  // Bug #12: Handle max level edge case — cap index to avoid undefined/Infinity
+  const nextIndex = Math.min(level, LEVEL_THRESHOLDS.length - 1);
+  const nextThreshold = LEVEL_THRESHOLDS[nextIndex];
+
+  // At max level, return 100% progress
+  if (level >= MAX_LEVEL || currentXp >= nextThreshold) {
+    return { current: currentXp - currentThreshold, next: 0, progress: 100 };
+  }
+
   const progress = ((currentXp - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
   return { current: currentXp - currentThreshold, next: nextThreshold - currentThreshold, progress };
 }

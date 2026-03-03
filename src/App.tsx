@@ -65,9 +65,11 @@ function App() {
       <Route
         path="/courses"
         element={
-          <DashboardLayout>
-            <Courses />
-          </DashboardLayout>
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Courses />
+            </DashboardLayout>
+          </ProtectedRoute>
         }
       />
       <Route
@@ -138,6 +140,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+        <Route path="/pricing" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
