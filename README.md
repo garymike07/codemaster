@@ -1,73 +1,143 @@
-# React + TypeScript + Vite
+# CodeMaster - Programming Learning Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind">
+  <img src="https://img.shields.io/badge/Convex-0x0A0A0A?style=for-the-badge&logoColor=white" alt="Convex">
+</p>
 
-Currently, two official plugins are available:
+An interactive programming learning platform with courses, coding challenges, and progress tracking. Built for aspiring developers in Kenya and beyond.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![CodeMaster Preview](https://via.placeholder.com/800x400/6366F1/FFFFFF?text=CodeMaster+Learning+Platform)
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Learning Features
+- **Interactive Courses** - Structured learning paths from beginner to advanced
+- **Coding Challenges** - Hands-on practice with real-time feedback
+- **Progress Tracking** - Visual progress indicators and achievements
+- **Code Editor** - In-browser code execution environment
 
-## Expanding the ESLint configuration
+### User Features
+- **User Authentication** - Secure login and registration
+- **Personal Dashboard** - Track your learning journey
+- **Bookmarks** - Save favorite lessons for later
+- **Certificates** - Earn certificates upon course completion
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Content Management
+- **Course Categories** - Organized by programming language and skill level
+- **Lesson Types** - Video, text, and interactive content
+- **Quizzes** - Test knowledge with automated grading
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Category | Technology |
+|----------|------------|
+| Frontend | React 18, TypeScript, Vite |
+| Styling | Tailwind CSS |
+| Backend | Convex (Serverless) |
+| Database | Convex |
+| Auth | JWT Authentication |
+| Code Execution | In-browser sandbox |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/garymike07/codemaster.git
+
+# Navigate to project directory
+cd codemaster
+
+# Install dependencies
+npm install
+
+# Set up Convex
+npx convex dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Environment Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_CONVEX_URL=your_convex_url
 ```
+
+### Running the Project
+
+```bash
+# Development
+npm run dev
+
+# Build
+npm run build
+```
+
+## Course Categories
+
+- **Web Development** - HTML, CSS, JavaScript, React
+- **Mobile Development** - React Native
+- **Backend Development** - Node.js, Python
+- **Data Science** - Python, Machine Learning
+- **DevOps** - Git, Docker, AWS
+
+## Project Structure
+
+```
+codemaster/
+├── convex/            # Backend functions
+│   ├── auth.ts      # Authentication
+│   ├── courses.ts   # Course management
+│   └── progress.ts  # User progress
+├── src/
+│   ├── components/  # UI components
+│   ├── pages/      # Page components
+│   ├── hooks/      # Custom hooks
+│   └── lib/        # Utilities
+└── public/          # Static assets
+```
+
+## API Endpoints
+
+### Authentication
+- `signup` - Create account
+- `login` - Authenticate
+- `getCurrentUser` - Get user profile
+
+### Courses
+- `getCourses` - List all courses
+- `getCourseById` - Get course details
+- `getLessons` - Get course lessons
+
+### Progress
+- `updateProgress` - Mark lesson complete
+- `getUserProgress` - Get user's progress
+- `awardCertificate` - Generate certificate
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Open Pull Request
+
+## License
+
+This project is proprietary software. All rights reserved.
+
+## Contact
+
+- **Author**: Gary Mike
+
+---
+
+<p align="center">
+  Learn to Code. Build Your Future.
+</p>
