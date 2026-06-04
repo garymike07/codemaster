@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CourseIcon } from "@/components/ui/course-icon";
@@ -115,6 +115,7 @@ const courses = [
 ];
 
 export default function Landing() {
+  const { isLoaded, isSignedIn } = useAuth();
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -124,25 +125,30 @@ export default function Landing() {
             <Logo />
           </div>
           <div className="flex items-center gap-2">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button variant="ghost" size="sm">
-                  Sign In
+            {!isLoaded ? (
+              <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
+            ) : !isSignedIn ? (
+              <>
+                <SignInButton mode="modal">
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button size="sm">Get Started</Button>
+                </SignUpButton>
+              </>
+            ) : (
+              <>
+                <UserButton afterSignOutUrl="/" />
+                <Button size="sm" asChild>
+                  <Link to="/dashboard">
+                    Dashboard
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Link>
                 </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button size="sm">Get Started</Button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton afterSignOutUrl="/" />
-              <Button size="sm" asChild>
-                <Link to="/dashboard">
-                  Dashboard
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
-              </Button>
-            </SignedIn>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -164,22 +170,23 @@ export default function Landing() {
             <span className="text-destructive font-medium">real-world skills</span>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto px-4 sm:px-0">
-            <SignedOut>
+            {!isLoaded ? (
+              <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
+            ) : !isSignedIn ? (
               <SignUpButton mode="modal">
                 <Button size="lg" className="gap-2">
                   Start Learning Free
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </SignUpButton>
-            </SignedOut>
-            <SignedIn>
+            ) : (
               <Button size="lg" className="gap-2" asChild>
                 <Link to="/dashboard">
                   Go to Dashboard
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-            </SignedIn>
+            )}
             <Link to="/courses">
               <Button size="lg" variant="outline">
                 Browse Courses
@@ -349,22 +356,23 @@ export default function Landing() {
             Join <span className="text-primary font-semibold">thousands</span> of learners who are building their programming skills
             with CodeMaster.
           </p>
-          <SignedOut>
+          {!isLoaded ? (
+            <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
+          ) : !isSignedIn ? (
             <SignUpButton mode="modal">
               <Button size="lg" className="gap-2">
                 Create Free Account
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </SignUpButton>
-          </SignedOut>
-          <SignedIn>
+          ) : (
             <Button size="lg" className="gap-2" asChild>
               <Link to="/dashboard">
                 Go to Dashboard
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-          </SignedIn>
+          )}
         </div>
       </section>
 
