@@ -4,6 +4,14 @@ import OpenAI from "openai";
 
 const http = httpRouter();
 
+function utf8ToBase64(str: string): string {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+function decodeBase64(str: string): string {
+  return decodeURIComponent(escape(atob(str)));
+}
+
 // Streaming AI Chat endpoint
 http.route({
   path: "/api/chat/stream",
@@ -205,9 +213,9 @@ http.route({
             "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
           },
           body: JSON.stringify({
-            source_code: btoa(code),
+            source_code: utf8ToBase64(code),
             language_id: languageId,
-            stdin: stdin ? btoa(stdin) : undefined,
+            stdin: stdin ? utf8ToBase64(stdin) : undefined,
           }),
         }
       );
@@ -219,13 +227,13 @@ http.route({
       let error = "";
 
       if (data.stdout) {
-        output = atob(data.stdout);
+        output = decodeBase64(data.stdout);
       }
       if (data.stderr) {
-        error = atob(data.stderr);
+        error = decodeBase64(data.stderr);
       }
       if (data.compile_output) {
-        error = atob(data.compile_output);
+        error = decodeBase64(data.compile_output);
       }
 
       return new Response(

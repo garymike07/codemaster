@@ -29,7 +29,11 @@ export const markLessonComplete = mutation({
 
     if (existing) return existing._id;
 
-    const courseId = lesson.courseId as Id<"courses">;
+    const rawCourseId = lesson.courseId;
+    if (typeof rawCourseId !== "string") {
+      throw new Error("Lesson is missing a valid courseId");
+    }
+    const courseId = rawCourseId as Id<"courses">;
     const progressId = await ctx.db.insert("progress", {
       userId: user._id,
       lessonId: args.lessonId,

@@ -1,8 +1,10 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { useConvexAuth } from "convex/react";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AutoSeeder } from "./components/AutoSeeder";
 
 // Lazy load pages for better initial load performance
 const Landing = lazy(() => import("./pages/Landing"));
@@ -16,6 +18,7 @@ const ExamRunner = lazy(() => import("./pages/ExamRunner"));
 const ExamCentre = lazy(() => import("./pages/ExamCentre"));
 const ExamWorkspace = lazy(() => import("./pages/ExamWorkspace"));
 const Playground = lazy(() => import("./pages/Playground"));
+const Upgrade = lazy(() => import("./pages/Upgrade"));
 
 // Loading spinner for lazy loaded components
 function PageLoader() {
@@ -28,8 +31,15 @@ function PageLoader() {
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoading } = useConvexAuth();
+  const [timedOut, setTimedOut] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading) return;
+    const id = setTimeout(() => setTimedOut(true), 5000);
+    return () => clearTimeout(id);
+  }, [isLoading]);
+
+  if (isLoading && !timedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -49,6 +59,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
+    <ErrorBoundary>
+    <AutoSeeder />
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -140,10 +152,21 @@ function App() {
           </ProtectedRoute>
         }
       />
-        <Route path="/pricing" element={<Navigate to="/dashboard" replace />} />
+      <Route
+        path="/upgrade"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Upgrade />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+        <Route path="/pricing" element={<Navigate to="/upgrade" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
+    </ErrorBoundary>
   );
 }
 

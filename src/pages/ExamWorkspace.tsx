@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { utf8ToBase64, decodeBase64 } from "@/lib/codeExecution";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -35,6 +36,7 @@ interface Question {
   testCases?: TestCase[];
   hints?: string[];
   points: number;
+  language?: string;
 }
 
 interface TestResult {
@@ -86,24 +88,6 @@ export default function ExamWorkspace() {
       }
     }
   }, [exam]);
-
-  // Timer countdown
-  useEffect(() => {
-    if (timeLeft === null || timeLeft <= 0 || isSubmitted) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === null || prev <= 1) {
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft, isSubmitted]);
 
   // Auto-save every 30 seconds
   useEffect(() => {
@@ -158,6 +142,29 @@ export default function ExamWorkspace() {
     }
   }, [exam, answers, startedAt, submitExam, isSubmitting]);
 
+  // Timer countdown
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+
+  useEffect(() => {
+    if (timeLeft === null || timeLeft <= 0 || isSubmitted) return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === null || prev <= 1) {
+          if (prev !== null && prev <= 1 && !isSubmitting) {
+            handleSubmit();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [timeLeft, isSubmitted, isSubmitting, handleSubmit]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -173,8 +180,9 @@ export default function ExamWorkspace() {
 
   const runTests = async () => {
     if (!exam) return;
+    if (currentQuestion < 0 || currentQuestion >= exam.questions.length) return;
     const question = exam.questions[currentQuestion] as Question;
-    if (question.type !== "code" || !question.testCases) return;
+    if (!question || question.type !== "code" || !question.testCases) return;
 
     setIsRunningTests(true);
     setTestResults([]);
@@ -193,7 +201,7 @@ export default function ExamWorkspace() {
               "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
             },
             body: JSON.stringify({
-              source_code: btoa(code),
+               source_code: utf8ToBase64(code),
               // Fix #8: Map language dynamically instead of hardcoding JavaScript (63)
               language_id: (() => {
                 const languageMap: Record<string, number> = {
@@ -218,7 +226,7 @@ export default function ExamWorkspace() {
         );
 
         const data = await response.json();
-        const actual = data.stdout ? atob(data.stdout).trim() : data.stderr ? atob(data.stderr) : "";
+         const actual = data.stdout ? decodeBase64(data.stdout).trim() : data.stderr ? decodeBase64(data.stderr) : "";
         const passed = actual === testCase.expectedOutput.trim();
 
         results.push({
@@ -499,7 +507,7 @@ export default function ExamWorkspace() {
                       <LazyMonacoEditor
                         height="300px"
                         className="md:h-[400px]"
-                        language="javascript"
+                        language={question.language ?? "javascript"}
                         theme={theme === "dark" ? "vs-dark" : "light"}
                         value={answers[question.id] || question.codeTemplate || ""}
                         onChange={(value) => handleAnswer(question.id, value || "")}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -18,6 +18,7 @@ import { AICodeExplainer } from "@/components/AICodeExplainer";
 import { KeyTakeawaysPanel } from "@/components/KeyTakeawaysPanel";
 import { BookOpen, Code2, Lightbulb, Play, FileText } from "lucide-react";
 import { isExecutableLanguage, getJudge0LanguageId, getMonacoLanguage } from "@/lib/languageSupport";
+import { utf8ToBase64 } from "@/lib/codeExecution";
 
 interface TestResult {
   passed: boolean;
@@ -48,6 +49,7 @@ export default function LessonPlayer() {
   const [activeEditorTab, setActiveEditorTab] = useState("output");
   const [mobileView, setMobileView] = useState<"content" | "editor">("content");
   const [selectedCode] = useState("");
+  const isSubmittingRef = useRef(false);
 
   // Editor State
   const [fontSize, setFontSize] = useState(14);
@@ -99,7 +101,7 @@ export default function LessonPlayer() {
             "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
           },
           body: JSON.stringify({
-            source_code: btoa(code),
+            source_code: utf8ToBase64(code),
             language_id: getJudge0LanguageId(lesson?.language),
           }),
         }
@@ -148,9 +150,9 @@ export default function LessonPlayer() {
               "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
             },
             body: JSON.stringify({
-              source_code: btoa(code),
+              source_code: utf8ToBase64(code),
               language_id: getJudge0LanguageId(lesson?.language),
-              stdin: testCase.input ? btoa(testCase.input) : undefined,
+              stdin: testCase.input ? utf8ToBase64(testCase.input) : undefined,
             }),
           }
         );
@@ -179,21 +181,27 @@ export default function LessonPlayer() {
   };
 
   const handleSubmit = async () => {
-    // For theory lessons or non-executable languages, just mark complete
-    if (lesson.type === "theory" || !canExecuteCode) {
-      await markComplete({ lessonId: lesson._id });
-      navigateToNextLesson();
-      return;
-    }
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    try {
+      // For theory lessons or non-executable languages, just mark complete
+      if (lesson.type === "theory" || !canExecuteCode) {
+        await markComplete({ lessonId: lesson._id });
+        navigateToNextLesson();
+        return;
+      }
 
-    // Fix #2: runTests now returns results directly — don't rely on stale state
-    const freshResults = await runTests();
-    const results = freshResults ?? testResults;
-    const allPassed = results.length === 0 || results.every((r) => r.passed);
+      // Fix #2: runTests now returns results directly — don't rely on stale state
+      const freshResults = await runTests();
+      const results = freshResults ?? testResults;
+      const allPassed = results.length === 0 || results.every((r) => r.passed);
 
-    if (allPassed) {
-      await markComplete({ lessonId: lesson._id });
-      navigateToNextLesson();
+      if (allPassed) {
+        await markComplete({ lessonId: lesson._id });
+        navigateToNextLesson();
+      }
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 

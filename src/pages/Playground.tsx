@@ -15,6 +15,7 @@ import { Play, Download, Share2, RotateCcw } from "lucide-react";
 import { useTheme } from "@/components/theme-context";
 import { EditorControls } from "@/components/EditorControls";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { utf8ToBase64, decodeBase64 } from "@/lib/codeExecution";
 
 const LANGUAGE_TEMPLATES = {
     javascript: `// JavaScript Playground
@@ -148,16 +149,20 @@ export default function Playground() {
                         "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
                     },
                     body: JSON.stringify({
-                        source_code: btoa(code),
+                         source_code: utf8ToBase64(code),
                         language_id: getLanguageId(language),
                     }),
                 }
             );
 
+            if (!response.ok) {
+                throw new Error(`Judge0 API error: ${response.status} ${response.statusText}`);
+            }
+
             const data = await response.json();
 
             if (data.stdout) {
-                setOutput(atob(data.stdout));
+                 setOutput(decodeBase64(data.stdout));
             } else if (data.stderr) {
                 setError(atob(data.stderr));
             } else if (data.compile_output) {
@@ -202,9 +207,6 @@ export default function Playground() {
         URL.revokeObjectURL(url);
     };
 
-    // Fix #18: Share button is disabled (coming soon) instead of showing an alert
-    const handleShare = undefined;
-
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
@@ -212,14 +214,14 @@ export default function Playground() {
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <Link to="/dashboard">
-                                <Button variant="ghost" size="sm" className="gap-2">
+                            <Button variant="ghost" size="sm" className="gap-2" asChild>
+                                <Link to="/dashboard">
                                     <span className="emoji-icon">←</span>
                                     Dashboard
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                             <div>
-                                <h1 className="text-2xl font-bold font-display">Code Playground</h1>
+                                <h1 className="text-2xl font-bold">Code Playground</h1>
                                 <p className="text-sm text-muted-foreground">
                                     Experiment with code in your browser
                                 </p>
