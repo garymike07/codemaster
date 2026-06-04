@@ -1,11 +1,22 @@
 import { Link } from "react-router-dom";
-import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CourseIcon } from "@/components/ui/course-icon";
 import { Logo } from "@/components/ui/logo";
 import { LinkBridgeLogo } from "@/components/ui/linkbridge-logo";
 import { InteractiveDemo } from "@/components/InteractiveDemo";
+import {
+  Code2,
+  CheckCircle2,
+  Zap,
+  BookOpen,
+  BarChart3,
+  Globe,
+  ArrowRight,
+  Star,
+  ChevronRight,
+} from "lucide-react";
 
 const testimonials = [
   {
@@ -47,42 +58,42 @@ const stats = [
 
 const features = [
   {
-    emoji: "▶️",
+    icon: Code2,
     title: "Interactive Code Editor",
     description:
       "Write and execute code directly in your browser with real-time feedback.",
     bgClass: "bg-primary/10",
   },
   {
-    emoji: "✅",
+    icon: CheckCircle2,
     title: "Auto-Graded Exercises",
     description:
       "Get instant feedback on your solutions with automated test cases.",
     bgClass: "bg-success/10",
   },
   {
-    emoji: "⚡",
+    icon: Zap,
     title: "Learn by Doing",
     description:
       "Practice with hands-on coding challenges after each concept.",
     bgClass: "bg-warning/10",
   },
   {
-    emoji: "👨‍🏫",
+    icon: BookOpen,
     title: "Expert-Crafted Content",
     description:
       "Courses designed by industry professionals and educators.",
     bgClass: "bg-secondary/10",
   },
   {
-    emoji: "🏆",
+    icon: BarChart3,
     title: "Track Your Progress",
     description:
       "Monitor your learning journey with detailed progress tracking.",
     bgClass: "bg-accent/10",
   },
   {
-    emoji: "💻",
+    icon: Globe,
     title: "Multiple Languages",
     description:
       "Learn Python, JavaScript, React, Go, Rust, and many more.",
@@ -108,70 +119,70 @@ export default function Landing() {
     <div className="min-h-screen">
       {/* Navigation */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
-        <div className="container flex h-14 items-center justify-between">
+        <div className="container mx-auto px-4 flex h-14 items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo />
-            <div className="hidden sm:flex items-center gap-1.5">
-              <span className="text-[10px] text-muted-foreground">Powered by</span>
-              <LinkBridgeLogo size="sm" />
-            </div>
           </div>
           <div className="flex items-center gap-2">
             <SignedOut>
               <SignInButton mode="modal">
                 <Button variant="ghost" size="sm">
-                  🔑 Sign In
+                  Sign In
                 </Button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <Button size="sm">🚀 Get Started</Button>
+                <Button size="sm">Get Started</Button>
               </SignUpButton>
             </SignedOut>
             <SignedIn>
-              <Link to="/dashboard">
-                <Button size="sm">📊 Dashboard</Button>
-              </Link>
+              <UserButton afterSignOutUrl="/" />
+              <Button size="sm" asChild>
+                <Link to="/dashboard">
+                  Dashboard
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Link>
+              </Button>
             </SignedIn>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container px-4 py-20 md:py-28 lg:py-36">
+      <section className="container mx-auto px-4 py-20 md:py-28 lg:py-36">
         <div className="flex flex-col items-center text-center gap-8 md:gap-10">
-          <Badge variant="secondary" className="px-4 py-1.5 text-sm font-display tracking-wide">
-            <span className="text-violet">&#9679;</span> Learn to code the right way
+          <Badge variant="secondary" className="px-4 py-1.5 text-sm tracking-wide">
+            <span className="text-primary mr-1">&#9679;</span> Learn to code the right way
           </Badge>
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight max-w-4xl leading-[1.1]">
-            <span className="font-serif italic font-normal">Love coding</span>{" "}
-            <span className="text-gradient-ocean font-display font-bold">again</span>
+            <span className="font-light">Love coding</span>{" "}
+            <span className="text-gradient-primary font-bold">again</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl px-4 leading-relaxed font-sans">
-            <span className="font-heading font-medium text-foreground">CodeMaster</span> is an interactive learning platform crafted for{" "}
-            <span className="text-mint font-medium">speed</span>,{" "}
-            <span className="text-amber font-medium">practice</span>, and{" "}
-            <span className="text-rose font-medium">real-world skills</span>.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl px-4 leading-relaxed">
+            <span className="font-semibold text-foreground">CodeMaster</span> is an interactive learning platform crafted for{" "}
+            <span className="text-primary font-medium">speed</span>,{" "}
+            <span className="text-warning font-medium">practice</span>, and{" "}
+            <span className="text-destructive font-medium">real-world skills</span>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto px-4 sm:px-0">
             <SignedOut>
               <SignUpButton mode="modal">
                 <Button size="lg" className="gap-2">
-                  🚀 Start Learning Free
-                  <span className="emoji-icon">→</span>
+                  Start Learning Free
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </SignUpButton>
             </SignedOut>
             <SignedIn>
-              <Link to="/dashboard">
-                <Button size="lg" className="gap-2">
-                  📊 Go to Dashboard
-                  <span className="emoji-icon">→</span>
-                </Button>
-              </Link>
+              <Button size="lg" className="gap-2" asChild>
+                <Link to="/dashboard">
+                  Go to Dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </SignedIn>
             <Link to="/courses">
               <Button size="lg" variant="outline">
-                📚 Browse Courses
+                Browse Courses
               </Button>
             </Link>
           </div>
@@ -179,12 +190,12 @@ export default function Landing() {
       </section>
 
       {/* Interactive Demo Section */}
-      <section className="container px-4 py-16 md:py-20 bg-muted/20">
+      <section className="container mx-auto px-4 py-16 md:py-20 bg-muted/20">
         <div className="text-center mb-12">
-          <Badge variant="secondary" className="px-4 py-1.5 text-sm font-display tracking-wide mb-4">
-            <span className="text-primary">●</span> Try it now
+          <Badge variant="secondary" className="px-4 py-1.5 text-sm tracking-wide mb-4">
+            <span className="text-primary mr-1">&#9679;</span> Try it now
           </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 font-display">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Start Coding in <span className="text-gradient-primary">Seconds</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -196,18 +207,17 @@ export default function Landing() {
 
 
       {/* Courses Preview */}
-      <section className="container py-16 overflow-hidden">
+      <section className="container mx-auto px-4 py-16 overflow-hidden">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4 font-display">
-            <span className="emoji-icon">🔥</span> <span className="text-gradient-purple">Popular</span> Courses
+          <h2 className="text-3xl font-bold mb-4">
+            <span className="text-gradient-primary">Popular</span> Courses
           </h2>
-          <p className="text-muted-foreground font-sans">
-            Start your journey with our <span className="text-sky font-medium">most popular</span> programming courses
+          <p className="text-muted-foreground">
+            Start your journey with our <span className="text-primary font-medium">most popular</span> programming courses
           </p>
         </div>
 
         <div className="relative w-full">
-          {/* Gradient Masks for Fade Effect */}
           <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
@@ -216,27 +226,25 @@ export default function Landing() {
               {[...courses, ...courses].map((course, index) => (
                 <div
                   key={`${course.name}-${index}`}
-                  className="flex flex-col items-center gap-2 p-6 rounded-lg border border-border hover:border-mint transition-all duration-300 cursor-pointer w-[200px] shrink-0 bg-card hover:shadow-lg"
+                  className="flex flex-col items-center gap-2 p-6 rounded-lg border border-border hover:border-primary transition-all duration-300 cursor-pointer w-[200px] shrink-0 bg-card hover:shadow-lg"
                 >
                   <CourseIcon icon={course.icon} size="lg" />
-                  <span className="font-medium font-display">{course.name}</span>
-                  <Badge variant="secondary" className="text-xs font-sans">
+                  <span className="font-semibold">{course.name}</span>
+                  <Badge variant="secondary" className="text-xs">
                     {course.level}
                   </Badge>
                 </div>
               ))}
             </div>
-            {/* Duplicate for seamless loop (handled by single map with double data above, but animate-marquee needs width adjustments if using transform translate) */}
-            {/* A safer way for pure CSS marquee is 2 sets of identical content */}
             <div className="flex gap-4 animate-marquee pause-on-hover min-w-full shrink-0" aria-hidden="true">
               {[...courses, ...courses].map((course, index) => (
                 <div
                   key={`duplicate-${course.name}-${index}`}
-                  className="flex flex-col items-center gap-2 p-6 rounded-lg border border-border hover:border-mint transition-all duration-300 cursor-pointer w-[200px] shrink-0 bg-card hover:shadow-lg"
+                  className="flex flex-col items-center gap-2 p-6 rounded-lg border border-border hover:border-primary transition-all duration-300 cursor-pointer w-[200px] shrink-0 bg-card hover:shadow-lg"
                 >
                   <CourseIcon icon={course.icon} size="lg" />
-                  <span className="font-medium font-display">{course.name}</span>
-                  <Badge variant="secondary" className="text-xs font-sans">
+                  <span className="font-semibold">{course.name}</span>
+                  <Badge variant="secondary" className="text-xs">
                     {course.level}
                   </Badge>
                 </div>
@@ -247,33 +255,36 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section className="container px-4 py-12 md:py-16">
+      <section className="container mx-auto px-4 py-12 md:py-16">
         <div className="text-center mb-8 md:mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 font-heading">
-            <span className="emoji-icon">💡</span> Why <span className="font-serif italic text-gradient-coral">CodeMaster</span>?
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            Why <span className="text-gradient-secondary">CodeMaster</span>?
           </h2>
-          <p className="text-muted-foreground font-sans">
-            Everything you need to become a <span className="text-teal font-medium">proficient programmer</span>
+          <p className="text-muted-foreground">
+            Everything you need to become a <span className="text-primary font-medium">proficient programmer</span>
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="flex flex-col gap-3 p-6 rounded-lg border border-border hover:border-primary transition-all duration-300 bg-card hover:shadow-lg"
-            >
-              <div className={`h-12 w-12 rounded-lg ${feature.bgClass} flex items-center justify-center`}>
-                <span className="text-2xl emoji-icon">{feature.emoji}</span>
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <div
+                key={feature.title}
+                className="flex flex-col gap-3 p-6 rounded-lg border border-border hover:border-primary transition-all duration-300 bg-card hover:shadow-lg"
+              >
+                <div className={`h-12 w-12 rounded-lg ${feature.bgClass} flex items-center justify-center`}>
+                  <Icon className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm">{feature.description}</p>
               </div>
-              <h3 className="font-semibold text-lg font-display">{feature.title}</h3>
-              <p className="text-muted-foreground font-sans text-sm">{feature.description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
       {/* Social Proof - Stats */}
-      <section className="container px-4 py-12 md:py-16 border-t border-border">
+      <section className="container mx-auto px-4 py-12 md:py-16 border-t border-border">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
@@ -287,15 +298,16 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section className="container px-4 py-12 md:py-16">
+      <section className="container mx-auto px-4 py-12 md:py-16">
         <div className="text-center mb-8 md:mb-12">
-          <Badge variant="secondary" className="px-4 py-1.5 text-sm font-display tracking-wide mb-4">
-            <span className="text-warning">★</span> Trusted by thousands
+          <Badge variant="secondary" className="px-4 py-1.5 text-sm tracking-wide mb-4">
+            <Star className="h-3.5 w-3.5 inline mr-1 text-warning" />
+            Trusted by thousands
           </Badge>
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 font-display">
-            <span className="emoji-icon">💬</span> What Our <span className="text-gradient-secondary">Learners</span> Say
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            What Our <span className="text-gradient-secondary">Learners</span> Say
           </h2>
-          <p className="text-muted-foreground font-sans">
+          <p className="text-muted-foreground">
             Join a community of <span className="text-primary font-medium">successful developers</span> who started here
           </p>
         </div>
@@ -311,15 +323,15 @@ export default function Landing() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold font-display">{testimonial.name}</span>
+                    <span className="font-semibold">{testimonial.name}</span>
                     <div className="flex text-warning text-sm">
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <span key={i}>★</span>
+                        <Star key={i} className="h-3.5 w-3.5 fill-current" />
                       ))}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">{testimonial.role}</p>
-                  <p className="text-sm leading-relaxed">"{testimonial.content}"</p>
+                  <p className="text-sm leading-relaxed">&ldquo;{testimonial.content}&rdquo;</p>
                 </div>
               </div>
             </div>
@@ -328,81 +340,81 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="container px-4 py-12 md:py-16">
-        <div className="rounded-xl border border-border bg-gradient-to-br from-card via-card to-violet/5 p-6 md:p-12 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 font-display">
-            <span className="emoji-icon">🎯</span> Ready to <span className="font-serif italic text-gradient-sunset">Start Learning</span>?
+      <section className="container mx-auto px-4 py-12 md:py-16">
+        <div className="rounded-xl border border-border bg-gradient-to-br from-card via-card to-primary/5 p-6 md:p-12 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            Ready to <span className="text-gradient-primary">Start Learning</span>?
           </h2>
-          <p className="text-muted-foreground mb-8 max-w-xl mx-auto font-sans">
-            Join <span className="text-gold font-semibold">thousands</span> of learners who are building their programming skills
-            with <span className="font-heading text-foreground">CodeMaster</span>.
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+            Join <span className="text-primary font-semibold">thousands</span> of learners who are building their programming skills
+            with CodeMaster.
           </p>
           <SignedOut>
             <SignUpButton mode="modal">
               <Button size="lg" className="gap-2">
-                ✨ Create Free Account
-                <span className="emoji-icon">→</span>
+                Create Free Account
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </SignUpButton>
           </SignedOut>
           <SignedIn>
-            <Link to="/dashboard">
-              <Button size="lg" className="gap-2">
-                📊 Go to Dashboard
-                <span className="emoji-icon">→</span>
-              </Button>
-            </Link>
+            <Button size="lg" className="gap-2" asChild>
+              <Link to="/dashboard">
+                Go to Dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </SignedIn>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-border py-8 md:py-12 bg-muted/30">
-        <div className="container px-4">
+        <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <Logo className="mb-4" />
-              <p className="footer-text text-muted-foreground max-w-sm">
-                Empowering the <span className="text-lime font-medium">next generation</span> of developers with{" "}
-                <span className="text-sky">interactive learning</span>,
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+                Empowering the next generation of developers with interactive learning,
                 expert-crafted courses, and real-world projects.
               </p>
             </div>
-            <div className="footer-text">
-              <p className="font-semibold mb-3 text-coral uppercase tracking-wide">📬 Contact Us</p>
-              <ul className="space-y-2 text-muted-foreground">
-                <li className="flex items-center gap-2 hover:text-primary transition-colors">
-                  📞 <a href="tel:0792618156">0792618156</a>
+            <div>
+              <p className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Contact</p>
+              <ul className="space-y-2 text-xs text-muted-foreground">
+                <li>
+                  <a href="tel:0792618156" className="hover:text-foreground transition-colors">0792618156</a>
                 </li>
-                <li className="flex items-center gap-2 hover:text-primary transition-colors">
-                  📧 <a href="mailto:wrootmike@gmail.com">wrootmike@gmail.com</a>
+                <li>
+                  <a href="mailto:wrootmike@gmail.com" className="hover:text-foreground transition-colors">wrootmike@gmail.com</a>
                 </li>
-                <li className="flex items-center gap-2 hover:text-primary transition-colors">
-                  🔗 <a
+                <li>
+                  <a
                     href="https://www.linkedin.com/in/mike-waitindi-654bb2344/"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="hover:text-foreground transition-colors"
                   >
                     LinkedIn Profile
                   </a>
                 </li>
               </ul>
             </div>
-            <div className="footer-text">
-              <p className="font-semibold mb-3 text-violet uppercase tracking-wide">📜 Legal</p>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-mint transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-mint transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-mint transition-colors">Cookie Policy</a></li>
+            <div>
+              <p className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Legal</p>
+              <ul className="space-y-2 text-xs text-muted-foreground">
+                <li><a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Cookie Policy</a></li>
               </ul>
             </div>
           </div>
-          <div className="footer-text border-t border-border pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-muted-foreground">
-              © {new Date().getFullYear()} <span className="text-foreground">CodeMaster</span>. All rights reserved.
+          <div className="border-t border-border pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
+            <p>
+              &copy; {new Date().getFullYear()} CodeMaster. All rights reserved.
             </p>
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Powered by</span>
+              <span>Powered by</span>
               <LinkBridgeLogo size="sm" />
             </div>
           </div>
