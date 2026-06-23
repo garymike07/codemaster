@@ -81,7 +81,7 @@ export function EnhancedTestResults({ results, testCases }: EnhancedTestResultPr
                                 <div className="mb-2">
                                     <p className="text-xs text-muted-foreground mb-1">Input:</p>
                                     <pre className="text-sm bg-muted/50 p-2 rounded font-mono">
-                                        {testCases[index].input}
+                                        {testCases[index]?.input}
                                     </pre>
                                 </div>
                             )}

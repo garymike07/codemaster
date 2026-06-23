@@ -65,7 +65,7 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
                   {conv.otherParticipant?.name || "Unknown"}
                 </p>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {formatTime(conv.lastMessageAt)}
+                  {conv.lastMessageAt ? formatTime(conv.lastMessageAt) : ""}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2 mt-1">

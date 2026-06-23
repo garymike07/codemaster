@@ -1,0 +1,86 @@
+{
+  "timestamp": 1782149714049,
+  "ttl": 300000,
+  "workingModels": [
+    {
+      "model": "nvidia/nemotron-3-nano-30b-a3b:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 938
+    },
+    {
+      "model": "cohere/north-mini-code:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 1240
+    },
+    {
+      "model": "poolside/laguna-xs.2:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 1254
+    },
+    {
+      "model": "liquid/lfm-2.5-1.2b-thinking:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 1323
+    },
+    {
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 1344
+    },
+    {
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 1347
+    },
+    {
+      "model": "liquid/lfm-2.5-1.2b-instruct:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 1370
+    },
+    {
+      "model": "nvidia/nemotron-nano-9b-v2:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 1650
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 1760
+    },
+    {
+      "model": "openai/gpt-oss-120b:free",
+      "keySuffix": "dde5",
+      "latencyMs": 2437
+    },
+    {
+      "model": "openai/gpt-oss-120b:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 2602
+    },
+    {
+      "model": "openai/gpt-oss-20b:free",
+      "keySuffix": "dde5",
+      "latencyMs": 2684
+    },
+    {
+      "model": "openai/gpt-oss-20b:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 3497
+    },
+    {
+      "model": "poolside/laguna-m.1:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 3515
+    },
+    {
+      "model": "nvidia/nemotron-nano-12b-v2-vl:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 6496
+    },
+    {
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "keySuffix": "f0cf",
+      "latencyMs": 10224
+    }
+  ]
+}

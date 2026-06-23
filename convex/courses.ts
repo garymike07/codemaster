@@ -8,8 +8,8 @@ export const list = query({
     const courses = await ctx.db
       .query("courses")
       .collect();
-    // Return all courses (filter out unpublished only if explicitly set to false)
-    return courses.filter((c) => c.isPublished !== false);
+    // Return published courses with content
+    return courses.filter((c) => c.isPublished !== false && (c.totalLessons ?? 0) > 0);
   },
 });
 
@@ -21,22 +21,35 @@ export const listPaginated = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 12;
-    
-    let query = ctx.db.query("courses");
-    
-    const courses = await query.take(limit + 1);
-    const publishedCourses = courses.filter((c) => c.isPublished !== false);
-    
-    const hasMore = publishedCourses.length > limit;
-    const items = hasMore ? publishedCourses.slice(0, limit) : publishedCourses;
-    
+
+    // Build the query — apply cursor if provided for correct pagination
+    // If a cursor was provided, we need to skip to that position.
+    // Convex does not have a built-in offset cursor, so we use the slug
+    // of the last-seen item as the starting point.
+    const allPublished = await ctx.db.query("courses").withIndex("by_slug")
+      .filter((q) => q.neq(q.field("isPublished"), false))
+      .collect();
+
+    // Apply cursor: skip entries that come before or at the cursor slug
+    let startIdx = 0;
+    if (args.cursor) {
+      const cursorIdx = allPublished.findIndex((c) => c._id === args.cursor);
+      if (cursorIdx !== -1) {
+        startIdx = cursorIdx + 1;
+      }
+    }
+
+    const paginated = allPublished.slice(startIdx, startIdx + limit);
+    const hasMore = startIdx + limit < allPublished.length;
+
     return {
-      items,
+      items: paginated,
       hasMore,
-      nextCursor: hasMore ? items[items.length - 1]?._id : null,
+      nextCursor: hasMore ? paginated[paginated.length - 1]?._id ?? null : null,
     };
   },
 });
+
 
 export const getBySlug = query({
   args: { slug: v.string() },

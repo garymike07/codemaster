@@ -1,4 +1,6 @@
 import { useState, useCallback, useRef } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { getConvexAuthHeader, getConvexSiteUrl } from "@/lib/convexHttp";
 
 interface StreamingChatOptions {
   onChunk?: (content: string) => void;
@@ -12,9 +14,11 @@ interface ChatMessage {
 }
 
 export function useStreamingChat(options: StreamingChatOptions = {}) {
+  const { getToken } = useAuth();
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const abortControllerRef = useRef<AbortController | null>(null);
+  const contentRef = useRef("");
 
   const sendMessage = useCallback(
     async ({
@@ -35,31 +39,33 @@ export function useStreamingChat(options: StreamingChatOptions = {}) {
       setIsStreaming(true);
       setStreamingContent("");
 
+      // Abort any previous in-flight request before creating a new one
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
       abortControllerRef.current = new AbortController();
 
+      const response = await fetch(`${getConvexSiteUrl()}/api/chat/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(await getConvexAuthHeader(getToken)),
+        },
+        body: JSON.stringify({
+          message,
+          context,
+          code,
+          lessonType,
+          tutorMode,
+          history: history.slice(-10).map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+
       try {
-        const convexUrl = import.meta.env.VITE_CONVEX_URL;
-        const siteUrl = convexUrl?.replace(".cloud", ".site");
-
-        const response = await fetch(`${siteUrl}/api/chat/stream`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message,
-            context,
-            code,
-            lessonType,
-            tutorMode,
-            history: history.slice(-10).map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-          }),
-          signal: abortControllerRef.current.signal,
-        });
-
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -93,20 +99,23 @@ export function useStreamingChat(options: StreamingChatOptions = {}) {
                 if (parsed.error) {
                   throw new Error(parsed.error);
                 }
-              } catch {
-                // Skip invalid JSON
+              } catch (e) {
+                if (!(e instanceof SyntaxError)) {
+                  throw e;
+                }
               }
             }
           }
         }
 
+        contentRef.current = fullContent;
         setStreamingContent("");
         options.onComplete?.(fullContent);
         return fullContent;
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           console.log("Stream aborted by user");
-          return streamingContent;
+          return contentRef.current;
         }
         const err = error instanceof Error ? error : new Error("Unknown error");
         options.onError?.(err);
@@ -116,7 +125,7 @@ export function useStreamingChat(options: StreamingChatOptions = {}) {
         abortControllerRef.current = null;
       }
     },
-    [options, streamingContent]
+    [getToken, options]
   );
 
   const cancelStream = useCallback(() => {

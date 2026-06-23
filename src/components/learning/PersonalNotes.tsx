@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { startTransition, useState, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,56 +32,19 @@ export function PersonalNotes({ lessonId, onSaveSuccess }: PersonalNotesProps) {
   // Load existing notes
   useEffect(() => {
     if (existingNotes) {
-      setContent(existingNotes.content || "");
-      setHasChanges(false);
+      startTransition(() => {
+        setContent(existingNotes.content || "");
+        setHasChanges(false);
+      });
     }
   }, [existingNotes]);
 
-  // Auto-save after 2 seconds of inactivity
-  const debouncedSave = useCallback(
-    async (newContent: string) => {
-      if (!hasChanges) return;
-
-      setIsSaving(true);
-      try {
-        await saveNotes({
-          lessonId,
-          content: newContent,
-          bookmarked: existingNotes?.bookmarked,
-        });
-        setLastSaved(new Date());
-        setHasChanges(false);
-        onSaveSuccess?.();
-      } catch (error) {
-        console.error("Failed to save notes:", error);
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    [lessonId, saveNotes, existingNotes?.bookmarked, hasChanges, onSaveSuccess]
-  );
-
-  useEffect(() => {
-    if (!hasChanges) return;
-
-    const timer = setTimeout(() => {
-      debouncedSave(content);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [content, hasChanges, debouncedSave]);
-
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
-    setHasChanges(true);
-  };
-
-  const handleSaveNow = async () => {
+  const persistNotes = async (newContent: string) => {
     setIsSaving(true);
     try {
       await saveNotes({
         lessonId,
-        content,
+        content: newContent,
         bookmarked: existingNotes?.bookmarked,
       });
       setLastSaved(new Date());
@@ -92,6 +55,41 @@ export function PersonalNotes({ lessonId, onSaveSuccess }: PersonalNotesProps) {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  useEffect(() => {
+    if (!hasChanges) return;
+
+    const timer = setTimeout(() => {
+      setIsSaving(true);
+      void saveNotes({
+        lessonId,
+        content,
+        bookmarked: existingNotes?.bookmarked,
+      })
+        .then(() => {
+          setLastSaved(new Date());
+          setHasChanges(false);
+          onSaveSuccess?.();
+        })
+        .catch((error) => {
+          console.error("Failed to save notes:", error);
+        })
+        .finally(() => {
+          setIsSaving(false);
+        });
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [content, existingNotes?.bookmarked, hasChanges, lessonId, onSaveSuccess, saveNotes]);
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    setHasChanges(true);
+  };
+
+  const handleSaveNow = async () => {
+    await persistNotes(content);
   };
 
   const handleToggleBookmark = async () => {

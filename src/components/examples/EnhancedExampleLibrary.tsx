@@ -35,7 +35,7 @@ interface Example {
 interface EnhancedExampleLibraryProps {
   examples: Example[];
   onLoadExample?: (code: string) => void;
-  onAskAI?: (question: string, code: string) => void;
+  onAskAI?: (question: string, code: string) => Promise<string> | void;
   language?: string;
 }
 
@@ -49,12 +49,13 @@ export function EnhancedExampleLibrary({
   examples,
   onLoadExample,
   onAskAI,
-  language = "javascript",
 }: EnhancedExampleLibraryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
   const [conceptFilter, setConceptFilter] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState("");
+  const [aiExplaining, setAiExplaining] = useState(false);
 
   // Get all unique concepts
   const allConcepts = useMemo(() => {
@@ -76,6 +77,16 @@ export function EnhancedExampleLibrary({
       <Card className="p-8 text-center">
         <p className="text-muted-foreground">
           No examples available for this lesson.
+        </p>
+      </Card>
+    );
+  }
+
+  if (filteredExamples.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <p className="text-muted-foreground">
+          No examples match the selected filter.
         </p>
       </Card>
     );
@@ -277,16 +288,33 @@ export function EnhancedExampleLibrary({
                 {onAskAI && (
                   <Button
                     variant="outline"
-                    onClick={() =>
-                      onAskAI("Explain this code step by step", displayCode)
-                    }
+                    onClick={async () => {
+                      setAiExplaining(true);
+                      setAiExplanation("");
+                      const response = await onAskAI("Explain this code step by step", displayCode);
+                      setAiExplanation(response || "");
+                      setAiExplaining(false);
+                    }}
+                    disabled={aiExplaining}
                     className="gap-2"
                   >
                     <span className="emoji-icon">🤖</span>
-                    AI Explain
+                    {aiExplaining ? "Explaining..." : "AI Explain"}
                   </Button>
                 )}
               </div>
+
+              {aiExplanation && (
+                <div className="border border-primary/20 bg-primary/5 rounded-lg p-4">
+                  <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <span className="emoji-icon">🤖</span>
+                    AI Explanation
+                  </p>
+                  <div className="prose prose-invert prose-sm max-w-none">
+                    <p className="whitespace-pre-wrap">{aiExplanation}</p>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="explanation" className="mt-4">

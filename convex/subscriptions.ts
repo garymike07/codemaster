@@ -5,6 +5,19 @@ import { TRIAL_DURATION_DAYS, MS_PER_DAY } from "./constants";
 export const giveTrialToExistingUsers = mutation({
   args: {},
   handler: async (ctx) => {
+    // Authorization: only teachers/admins can bulk-grant trials
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const caller = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!caller || caller.role !== "teacher") {
+      throw new Error("Forbidden: only teachers can bulk-grant trials");
+    }
+
     const users = await ctx.db.query("users").collect();
     const now = Date.now();
     const trialEndsAt = now + (TRIAL_DURATION_DAYS * MS_PER_DAY);
@@ -24,6 +37,7 @@ export const giveTrialToExistingUsers = mutation({
     return { updated, total: users.length };
   },
 });
+
 
 export const giveTrialToCurrentUser = mutation({
   args: {},
@@ -104,8 +118,15 @@ export const startTrial = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
+
+    if (identity.subject !== user.clerkId) {
+      throw new Error("Unauthorized: cannot start trial for another user");
+    }
 
     // Don't start a new trial if user already has one or has active subscription
     if (user.subscriptionStatus === "active") {
@@ -136,6 +157,12 @@ export const checkAccess = query({
   args: {
     feature: v.optional(v.string()),
   },
+  // NOTE: The `feature` argument is accepted for API compatibility but is NOT
+  // currently used to differentiate access by feature. All users with an active
+  // subscription or active trial have access to all features.
+  //
+  // To implement per-feature gating, add a `featurePlans` table that maps
+  // feature keys to required subscription plans, and check it here.
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return { hasAccess: false, reason: "not_authenticated" };

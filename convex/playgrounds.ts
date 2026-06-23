@@ -148,14 +148,17 @@ export const resetSession = mutation({
       .unique();
 
     if (existingSession) {
+      // Only patch the fields that should be reset.
+      // Do NOT include lastRunOutput/testResults as undefined — Convex will
+      // interpret undefined fields inconsistently. Omit them to preserve
+      // whatever was stored (these are output caches, not critical data).
       await ctx.db.patch(existingSession._id, {
         code: starterCode,
         savedAt: Date.now(),
-        lastRunOutput: undefined,
-        testResults: undefined,
       });
       return existingSession._id;
     }
+
 
     return null;
   },

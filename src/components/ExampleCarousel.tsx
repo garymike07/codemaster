@@ -17,7 +17,7 @@ interface Example {
 interface ExampleCarouselProps {
     examples: Example[];
     onLoadExample?: (code: string) => void;
-    onAskAI?: (question: string, code: string) => void;
+    onAskAI?: (question: string, code: string) => Promise<string> | void;
 }
 
 export function ExampleCarousel({
@@ -26,6 +26,8 @@ export function ExampleCarousel({
     onAskAI
 }: ExampleCarouselProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [aiExplanation, setAiExplanation] = useState("");
+    const [aiExplaining, setAiExplaining] = useState(false);
 
     if (!examples || examples.length === 0) {
         return (
@@ -145,14 +147,33 @@ export function ExampleCarousel({
                                 {onAskAI && (
                                     <Button
                                         variant="outline"
-                                        onClick={() => onAskAI("Explain this code in detail", currentExample.code)}
+                                        onClick={async () => {
+                                            setAiExplaining(true);
+                                            setAiExplanation("");
+                                            const response = await onAskAI("Explain this code in detail", currentExample.code);
+                                            setAiExplanation(response || "");
+                                            setAiExplaining(false);
+                                        }}
+                                        disabled={aiExplaining}
                                         className="gap-2"
                                     >
                                         <span className="emoji-icon">🤖</span>
-                                        AI Explain
+                                        {aiExplaining ? "Explaining..." : "AI Explain"}
                                     </Button>
                                 )}
                             </div>
+
+                            {aiExplanation && (
+                                <div className="border border-primary/20 bg-primary/5 rounded-lg p-4">
+                                    <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                        <span className="emoji-icon">🤖</span>
+                                        AI Explanation
+                                    </p>
+                                    <div className="prose prose-invert prose-sm max-w-none">
+                                        <p className="whitespace-pre-wrap">{aiExplanation}</p>
+                                    </div>
+                                </div>
+                            )}
                         </TabsContent>
 
                         <TabsContent value="explanation">

@@ -14,6 +14,7 @@ import {
   FileText,
   Video,
 } from "lucide-react";
+import { renderSafeMarkdown } from "@/lib/markdown";
 
 interface Resource {
   title: string;
@@ -51,6 +52,46 @@ const resourceIcons = {
   tutorial: Play,
 };
 
+function SectionHeader({
+  id,
+  icon: Icon,
+  title,
+  badge,
+  expandedSections,
+  onToggle,
+  className = "",
+}: {
+  id: string;
+  icon: React.ElementType;
+  title: string;
+  badge?: string;
+  expandedSections: Set<string>;
+  onToggle: (id: string) => void;
+  className?: string;
+}) {
+  return (
+    <button
+      onClick={() => onToggle(id)}
+      className={`flex items-center justify-between w-full text-left group ${className}`}
+    >
+      <div className="flex items-center gap-2">
+        {expandedSections.has(id) ? (
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        )}
+        <Icon className="w-5 h-5" />
+        <span className="font-semibold">{title}</span>
+        {badge && (
+          <Badge variant="secondary" className="text-xs">
+            {badge}
+          </Badge>
+        )}
+      </div>
+    </button>
+  );
+}
+
 export function EnhancedLessonNotes({
   content,
   notes,
@@ -86,62 +127,8 @@ export function EnhancedLessonNotes({
     setCompletedObjectives(newCompleted);
   };
 
-  const renderMarkdown = (text: string) => {
-    return text
-      .replace(
-        /```(\w+)?\n([\s\S]*?)```/g,
-        '<pre class="bg-muted p-4 rounded-lg overflow-x-auto my-4 text-sm"><code>$2</code></pre>'
-      )
-      .replace(
-        /`([^`]+)`/g,
-        '<code class="bg-muted px-2 py-1 rounded text-sm font-mono">$1</code>'
-      )
-      .replace(/### (.*)/g, '<h3 class="text-lg font-semibold mt-6 mb-3">$1</h3>')
-      .replace(/## (.*)/g, '<h2 class="text-xl font-semibold mt-8 mb-4">$1</h2>')
-      .replace(/# (.*)/g, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/\n\n/g, '</p><p class="my-3 leading-relaxed">')
-      .replace(/^- (.*)/gm, '<li class="ml-4">$1</li>');
-  };
-
-  const SectionHeader = ({
-    id,
-    icon: Icon,
-    title,
-    badge,
-    className = "",
-  }: {
-    id: string;
-    icon: React.ElementType;
-    title: string;
-    badge?: string;
-    className?: string;
-  }) => (
-    <button
-      onClick={() => toggleSection(id)}
-      className={`flex items-center justify-between w-full text-left group ${className}`}
-    >
-      <div className="flex items-center gap-2">
-        {expandedSections.has(id) ? (
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        )}
-        <Icon className="w-5 h-5" />
-        <span className="font-semibold">{title}</span>
-        {badge && (
-          <Badge variant="secondary" className="text-xs">
-            {badge}
-          </Badge>
-        )}
-      </div>
-    </button>
-  );
-
   return (
     <div className="space-y-4">
-      {/* Quick Summary (TL;DR) */}
       {notes?.summary && (
         <Card className="p-4 bg-primary/5 border-primary/20">
           <SectionHeader
@@ -149,6 +136,8 @@ export function EnhancedLessonNotes({
             icon={Lightbulb}
             title="Quick Summary"
             className="text-primary mb-3"
+            expandedSections={expandedSections}
+            onToggle={toggleSection}
           />
           {expandedSections.has("summary") && (
             <div className="pl-6 mt-2">
@@ -168,7 +157,6 @@ export function EnhancedLessonNotes({
         </Card>
       )}
 
-      {/* Learning Objectives */}
       {notes?.learningObjectives && notes.learningObjectives.length > 0 && (
         <Card className="p-4">
           <SectionHeader
@@ -176,6 +164,8 @@ export function EnhancedLessonNotes({
             icon={Target}
             title="Learning Objectives"
             badge={`${completedObjectives.size}/${notes.learningObjectives.length}`}
+            expandedSections={expandedSections}
+            onToggle={toggleSection}
           />
           {expandedSections.has("objectives") && (
             <ul className="pl-6 mt-3 space-y-2">
@@ -209,7 +199,6 @@ export function EnhancedLessonNotes({
         </Card>
       )}
 
-      {/* Prerequisites */}
       {notes?.prerequisites && notes.prerequisites.length > 0 && (
         <Card className="p-4 bg-warning/5 border-warning/20">
           <SectionHeader
@@ -218,6 +207,8 @@ export function EnhancedLessonNotes({
             title="Prerequisites"
             badge={`${notes.prerequisites.length}`}
             className="text-warning"
+            expandedSections={expandedSections}
+            onToggle={toggleSection}
           />
           {expandedSections.has("prerequisites") && (
             <ul className="pl-6 mt-3 space-y-1">
@@ -241,10 +232,9 @@ export function EnhancedLessonNotes({
         </Card>
       )}
 
-      {/* Main Content */}
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <SectionHeader id="content" icon={BookOpen} title="Lesson Content" />
+          <SectionHeader id="content" icon={BookOpen} title="Lesson Content" expandedSections={expandedSections} onToggle={toggleSection} />
           {onAskAI && (
             <Button
               variant="outline"
@@ -260,13 +250,12 @@ export function EnhancedLessonNotes({
           <div
             className="prose prose-invert max-w-none pl-6"
             dangerouslySetInnerHTML={{
-              __html: renderMarkdown(notes?.detailedContent || content),
+              __html: renderSafeMarkdown(notes?.detailedContent || content, true),
             }}
           />
         )}
       </Card>
 
-      {/* Key Takeaways */}
       {keyTakeaways && keyTakeaways.length > 0 && (
         <Card className="p-4 bg-success/5 border-success/20">
           <SectionHeader
@@ -275,6 +264,8 @@ export function EnhancedLessonNotes({
             title="Key Takeaways"
             badge={`${keyTakeaways.length}`}
             className="text-success"
+            expandedSections={expandedSections}
+            onToggle={toggleSection}
           />
           {expandedSections.has("takeaways") && (
             <ul className="pl-6 mt-3 space-y-2">
@@ -289,7 +280,6 @@ export function EnhancedLessonNotes({
         </Card>
       )}
 
-      {/* Common Mistakes */}
       {commonMistakes && commonMistakes.length > 0 && (
         <Card className="p-4 bg-destructive/5 border-destructive/20">
           <SectionHeader
@@ -298,6 +288,8 @@ export function EnhancedLessonNotes({
             title="Common Mistakes to Avoid"
             badge={`${commonMistakes.length}`}
             className="text-destructive"
+            expandedSections={expandedSections}
+            onToggle={toggleSection}
           />
           {expandedSections.has("mistakes") && (
             <div className="pl-6 mt-3 space-y-4">
@@ -327,7 +319,6 @@ export function EnhancedLessonNotes({
         </Card>
       )}
 
-      {/* External Resources */}
       {notes?.resources && notes.resources.length > 0 && (
         <Card className="p-4">
           <SectionHeader
@@ -335,6 +326,8 @@ export function EnhancedLessonNotes({
             icon={Link2}
             title="Additional Resources"
             badge={`${notes.resources.length}`}
+            expandedSections={expandedSections}
+            onToggle={toggleSection}
           />
           {expandedSections.has("resources") && (
             <div className="pl-6 mt-3 grid gap-2">

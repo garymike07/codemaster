@@ -60,25 +60,15 @@ export default function ChatAssistant({ context, code, lessonType }: ChatAssista
         lessonType,
       });
 
-      if (result.success && result.message) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: result.message!,
-          },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: "Sorry, I encountered an error. Please try again.",
-          },
-        ]);
-      }
+      const resultValue = result as { success: boolean; suggestion?: string; error?: string };
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: resultValue.success && resultValue.suggestion
+          ? resultValue.suggestion
+          : resultValue.error || "Sorry, I encountered an error. Please try again.",
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error(error);
       setMessages((prev) => [

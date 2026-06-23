@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { startTransition, useState, useEffect, useCallback } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { LazyMonacoEditor } from "@/components/LazyMonacoEditor";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/components/theme-context";
+import { useToast } from "@/hooks/useToast";
+import { AUTOSAVE_DELAY_MS, DELETE_CONFIRM_TIMEOUT_MS } from "@/lib/constants";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
   Play,
   RotateCcw,
-  Save,
   Lightbulb,
   CheckCircle2,
   XCircle,
@@ -48,6 +48,7 @@ interface EnhancedPlaygroundProps {
   config?: PlaygroundConfig;
   codeTemplate?: string;
   language?: string;
+  onCodeChange?: (code: string) => void;
   onRunCode?: (code: string) => Promise<string>;
   onRunTests?: (code: string) => Promise<TestResult[]>;
   onAskAI?: (question: string, code: string) => void;
@@ -58,25 +59,28 @@ export function EnhancedPlayground({
   config,
   codeTemplate,
   language = "javascript",
+  onCodeChange,
   onRunCode,
   onRunTests,
   onAskAI,
 }: EnhancedPlaygroundProps) {
   const { theme } = useTheme();
+  const { addToast } = useToast();
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState("output");
-  const [showHints, setShowHints] = useState(false);
   const [revealedHints, setRevealedHints] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingReset, setPendingReset] = useState(false);
+  const [pendingSolutionReveal, setPendingSolutionReveal] = useState(false);
 
   // Editor settings
   const [fontSize, setFontSize] = useState(14);
-  const [wordWrap, setWordWrap] = useState(true);
+  const [wordWrap] = useState(true);
 
   // Convex queries and mutations
   const savedSession = useQuery(api.playgrounds.getSession, { lessonId });
@@ -85,20 +89,21 @@ export function EnhancedPlayground({
 
   // Load saved code or starter code
   useEffect(() => {
-    if (savedSession?.code) {
-      setCode(savedSession.code);
-      if (savedSession.lastRunOutput) {
-        setOutput(savedSession.lastRunOutput);
+    const initialCode = savedSession?.code || config?.starterCode || codeTemplate || "";
+    startTransition(() => {
+      if (savedSession?.code) {
+        setCode(initialCode);
+        setOutput(savedSession.lastRunOutput || "");
+        setTestResults(savedSession.testResults || []);
+      } else {
+        setCode(initialCode);
+        setOutput("");
+        setTestResults([]);
       }
-      if (savedSession.testResults) {
-        setTestResults(savedSession.testResults);
-      }
-    } else {
-      const starterCode = config?.starterCode || codeTemplate || "";
-      setCode(starterCode);
-    }
-    setHasUnsavedChanges(false);
-  }, [savedSession, config?.starterCode, codeTemplate]);
+      setHasUnsavedChanges(false);
+    });
+    onCodeChange?.(initialCode);
+  }, [savedSession, config?.starterCode, codeTemplate, onCodeChange]);
 
   // Auto-save
   const debouncedSave = useCallback(async () => {
@@ -125,13 +130,27 @@ export function EnhancedPlayground({
 
     const timer = setTimeout(() => {
       debouncedSave();
-    }, 3000);
+    }, AUTOSAVE_DELAY_MS);
 
     return () => clearTimeout(timer);
   }, [code, hasUnsavedChanges, debouncedSave]);
 
+  useEffect(() => {
+    if (!pendingReset) return;
+    const timeout = setTimeout(() => setPendingReset(false), DELETE_CONFIRM_TIMEOUT_MS);
+    return () => clearTimeout(timeout);
+  }, [pendingReset]);
+
+  useEffect(() => {
+    if (!pendingSolutionReveal) return;
+    const timeout = setTimeout(() => setPendingSolutionReveal(false), DELETE_CONFIRM_TIMEOUT_MS);
+    return () => clearTimeout(timeout);
+  }, [pendingSolutionReveal]);
+
   const handleCodeChange = (value: string | undefined) => {
-    setCode(value ?? "");
+    const nextCode = value ?? "";
+    setCode(nextCode);
+    onCodeChange?.(nextCode);
     setHasUnsavedChanges(true);
   };
 
@@ -172,19 +191,26 @@ export function EnhancedPlayground({
   };
 
   const handleReset = async () => {
-    if (!confirm("Reset code to starter template? Your changes will be lost.")) {
+    if (!pendingReset) {
+      setPendingReset(true);
+      addToast("Click Reset again within 5 seconds to confirm.", "warning");
       return;
     }
+    setPendingSolutionReveal(false);
 
     try {
       await resetSession({ lessonId });
       const starterCode = config?.starterCode || codeTemplate || "";
       setCode(starterCode);
+      onCodeChange?.(starterCode);
       setOutput("");
       setTestResults([]);
       setHasUnsavedChanges(false);
+      setPendingReset(false);
+      addToast("Playground has been reset.", "success");
     } catch (error) {
       console.error("Failed to reset session:", error);
+      addToast("Failed to reset playground session.", "error");
     }
   };
 
@@ -195,15 +221,19 @@ export function EnhancedPlayground({
   };
 
   const handleShowSolution = () => {
-    if (!confirm("Are you sure you want to see the solution?")) {
+    if (!pendingSolutionReveal) {
+      setPendingSolutionReveal(true);
+      addToast("Click Show Solution again within 5 seconds to reveal it.", "warning");
       return;
     }
+    setPendingSolutionReveal(false);
     setShowSolution(true);
   };
 
   const handleLoadSolution = () => {
     if (config?.solution) {
       setCode(config.solution);
+      onCodeChange?.(config.solution);
       setHasUnsavedChanges(true);
     }
   };
@@ -246,12 +276,12 @@ export function EnhancedPlayground({
 
           <Button
             size="sm"
-            variant="outline"
+            variant={pendingReset ? "destructive" : "outline"}
             onClick={handleReset}
             className="gap-1"
           >
             <RotateCcw className="w-3 h-3" />
-            Reset
+            {pendingReset ? "Confirm Reset" : "Reset"}
           </Button>
         </div>
 
@@ -415,10 +445,10 @@ export function EnhancedPlayground({
                   ) : (
                     <Button
                       size="sm"
-                      variant="destructive"
+                      variant={pendingSolutionReveal ? "destructive" : "outline"}
                       onClick={handleShowSolution}
                     >
-                      Show Solution
+                      {pendingSolutionReveal ? "Confirm Reveal" : "Show Solution"}
                     </Button>
                   )}
                 </div>

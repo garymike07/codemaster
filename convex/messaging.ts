@@ -17,7 +17,10 @@ export const getOrCreateConversation = mutation({
 
     if (!currentUser) throw new Error("User not found");
 
-    // Check if conversation already exists
+    // SCALABILITY NOTE: This loads all conversations then filters in memory.
+    // This is acceptable for small user counts but will degrade at scale.
+    // TODO: Add a by_participants index or store a sorted composite key
+    // (e.g., `${userId1}-${userId2}`) to enable O(1) lookups.
     const conversations = await ctx.db
       .query("conversations")
       .collect();

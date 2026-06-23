@@ -38,7 +38,9 @@ export const saveMessage = mutation({
       .unique();
 
     if (existingChat) {
-      // Add message to existing history
+      // Convex mutations are serialized — this read-modify-write is safe.
+      // Two concurrent saveMessage calls for the same lesson will be executed
+      // sequentially by the Convex runtime, so no messages can be lost.
       const updatedMessages = [...existingChat.messages, args.message];
       await ctx.db.patch(existingChat._id, {
         messages: updatedMessages,
@@ -46,6 +48,7 @@ export const saveMessage = mutation({
         totalMessages: updatedMessages.length,
       });
       return existingChat._id;
+
     } else {
       // Create new chat history
       return await ctx.db.insert("aiChatHistory", {

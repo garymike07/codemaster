@@ -79,6 +79,12 @@ export const submitExam = mutation({
     const exam = await ctx.db.get(args.examId);
     if (!exam) throw new Error("Exam not found");
 
+    // Students may only submit against published exams.
+    // Prevent access to teacher drafts or deactivated exams.
+    if (!exam.isPublished) {
+      throw new Error("Exam is not available for submission");
+    }
+
     let totalScore = 0;
     const gradedAnswers = args.answers.map((answer) => {
       const question = exam.questions.find((q) => q.id === answer.questionId);
@@ -261,10 +267,10 @@ export const deleteExam = mutation({
     const exam = await ctx.db.get(args.examId);
     if (!exam) throw new Error("Exam not found");
 
-    // Only allow deletion if:
-    // 1. It's an AI practice exam (courseId === "AI_PRACTICE")
-    // 2. The current user is the creator
-    if (exam.courseId !== "AI_PRACTICE" || exam.createdBy !== user._id) {
+    // Allow deletion if:
+    // 1. The current user is the creator, OR
+    // 2. The current user is a teacher
+    if (exam.createdBy !== user._id && user.role !== "teacher") {
       throw new Error("Not authorized to delete this exam");
     }
 

@@ -44,8 +44,7 @@ An interactive programming learning platform with courses, coding challenges, an
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- npm or yarn
+- Bun 1.3+
 
 ### Installation
 
@@ -57,10 +56,10 @@ git clone https://github.com/garymike07/codemaster.git
 cd codemaster
 
 # Install dependencies
-npm install
+bun install
 
 # Set up Convex
-npx convex dev
+bunx convex dev
 ```
 
 ### Environment Setup
@@ -73,10 +72,10 @@ VITE_CONVEX_URL=your_convex_url
 
 ```bash
 # Development
-npm run dev
+bun run dev
 
 # Build
-npm run build
+bun run build
 ```
 
 ## Course Categories

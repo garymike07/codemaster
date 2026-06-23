@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { startTransition, useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -14,6 +14,9 @@ import { LearningObjectives } from "@/components/learning/LearningObjectives";
 import { EnhancedExampleLibrary } from "@/components/examples/EnhancedExampleLibrary";
 import { EnhancedPlayground } from "@/components/playground/EnhancedPlayground";
 import { StreamingChatAssistant } from "@/components/ai/StreamingChatAssistant";
+import type { StreamingChatAssistantHandle } from "@/components/ai/StreamingChatAssistant";
+import { AICodeExplainer } from "@/components/AICodeExplainer";
+import { LoadingSpinner } from "@/components/common";
 import { useCodeExecution } from "@/hooks/useCodeExecution";
 import {
   BookOpen,
@@ -33,6 +36,7 @@ export default function ModuleLearningHub() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   const { executeCode, runTests } = useCodeExecution();
+  const chatRef = useRef<StreamingChatAssistantHandle>(null);
 
   const [activeTab, setActiveTab] = useState("notes");
   const [playgroundCode, setPlaygroundCode] = useState("");
@@ -57,6 +61,7 @@ export default function ModuleLearningHub() {
 
   // AI Actions
   const explainCode = useAction(api.ai.explainCode);
+  const askAction = useAction(api.ai.ask);
 
   // Get current lesson index and navigation
   const currentIndex = courseLessons?.findIndex((l) => l._id === lessonId) ?? -1;
@@ -76,36 +81,48 @@ export default function ModuleLearningHub() {
   // Set initial playground code when lesson changes
   const initialCode = lesson?.codeTemplate || lesson?.playground?.starterCode || "";
   useEffect(() => {
-    setPlaygroundCode(initialCode);
+    startTransition(() => {
+      setPlaygroundCode(initialCode);
+    });
   }, [initialCode]);
 
   // Check if this lesson's language supports code execution
   const canExecuteCode = isExecutableLanguage(lesson?.language);
 
   if (!lesson) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen label="Loading module lesson" />;
   }
 
   const handleAskAI = async (question: string) => {
-    // This will be handled by the ChatAssistant component
-    console.log("AI Question:", question);
+    chatRef.current?.askQuestion(question);
   };
 
-  const handleExplainCode = async (code: string) => {
+  const handleExplainCode = async (code: string, context?: string) => {
     try {
       const result = await explainCode({
         code,
-        context: lesson.content,
-        simplify: false,
+        context: context || lesson.content,
+        simplify: context ? context.toLowerCase().includes("simple") || context.toLowerCase().includes("beginner") : false,
       });
-      return result.explanation || "Could not generate explanation";
+      return result.success ? result.explanation || "" : "Could not generate explanation";
     } catch (error) {
       console.error("Failed to explain code:", error);
       return "Failed to explain code";
+    }
+  };
+
+  const handlePlaygroundAsk = async (question: string, code: string) => {
+    try {
+      const result = await askAction({
+        message: question,
+        context: lesson.content,
+        code,
+        lessonType: lesson.type,
+      });
+      return result.success && "suggestion" in result ? (result.suggestion || "") : "Could not answer question";
+    } catch (error) {
+      console.error("Failed to ask AI:", error);
+      return "Failed to get AI response";
     }
   };
 
@@ -135,7 +152,7 @@ export default function ModuleLearningHub() {
           <div className="flex items-center justify-between">
             {/* Back and Title */}
             <div className="flex items-center gap-4">
-              <Link to={`/course/${lesson.courseId}`}>
+              <Link to="/courses">
                 <Button variant="ghost" size="sm" className="gap-2">
                   <ChevronLeft className="w-4 h-4" />
                   Back
@@ -251,7 +268,7 @@ export default function ModuleLearningHub() {
                   <EnhancedExampleLibrary
                     examples={lesson.examples}
                     onLoadExample={handleLoadExample}
-                    onAskAI={(question, code) => handleExplainCode(code)}
+                    onAskAI={(question, code) => handlePlaygroundAsk(question, code)}
                     language={lesson.language}
                   />
                 ) : (
@@ -265,17 +282,25 @@ export default function ModuleLearningHub() {
 
               <TabsContent value="playground" className="mt-0">
                 {lesson.type !== "theory" && canExecuteCode ? (
-                  <Card className="h-[600px] overflow-hidden">
-                    <EnhancedPlayground
-                      lessonId={lesson._id}
-                      config={lesson.playground}
-                      codeTemplate={lesson.codeTemplate}
-                      language={lesson.language}
-                      onRunCode={handleRunCode}
-                      onRunTests={handleRunTests}
-                      onAskAI={(question, code) => handleExplainCode(code)}
+                  <div className="space-y-4">
+                    <Card className="h-[600px] overflow-hidden">
+                      <EnhancedPlayground
+                        lessonId={lesson._id}
+                        config={lesson.playground}
+                        codeTemplate={lesson.codeTemplate}
+                        language={lesson.language}
+                        onCodeChange={setPlaygroundCode}
+                        onRunCode={handleRunCode}
+                        onRunTests={handleRunTests}
+                      onAskAI={(question, code) => handlePlaygroundAsk(question, code)}
+                      />
+                    </Card>
+                    <AICodeExplainer
+                      selectedCode={playgroundCode}
+                      lessonContext={lesson.content}
+                      onExplain={(code) => handleExplainCode(code)}
                     />
-                  </Card>
+                  </div>
                 ) : !canExecuteCode ? (
                   <Card className="p-8 text-center">
                     <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -386,6 +411,7 @@ export default function ModuleLearningHub() {
 
       {/* AI Assistant with Streaming */}
       <StreamingChatAssistant
+        ref={chatRef}
         lessonId={lesson._id}
         context={lesson.content}
         code={playgroundCode}

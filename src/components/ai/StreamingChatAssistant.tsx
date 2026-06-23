@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import { useConvexAuth } from "convex/react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { getConvexAuthHeader, getConvexSiteUrl } from "@/lib/convexHttp";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
   MessageSquare,
@@ -66,14 +68,19 @@ const tutorModes: { id: TutorMode; label: string; icon: React.ReactNode; descrip
   },
 ];
 
-export function StreamingChatAssistant({
+export interface StreamingChatAssistantHandle {
+  askQuestion: (question: string) => void;
+}
+
+export const StreamingChatAssistant = forwardRef<StreamingChatAssistantHandle, StreamingChatAssistantProps>(function StreamingChatAssistant({
   lessonId,
   context,
   code,
   lessonType,
   suggestedQuestions,
-}: StreamingChatAssistantProps) {
+}, ref) {
   const { isAuthenticated } = useConvexAuth();
+  const { getToken } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -129,16 +136,22 @@ export function StreamingChatAssistant({
         console.error("Failed to save user message:", error);
       }
 
+      // Abort any previous in-flight request before creating a new one
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
       // Create abort controller for cancellation
       abortControllerRef.current = new AbortController();
 
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_CONVEX_URL?.replace(".cloud", ".site")}/api/chat/stream`,
+          `${getConvexSiteUrl()}/api/chat/stream`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...(await getConvexAuthHeader(getToken)),
             },
             body: JSON.stringify({
               message: text,
@@ -187,7 +200,10 @@ export function StreamingChatAssistant({
                 if (parsed.error) {
                   throw new Error(parsed.error);
                 }
-              } catch {
+              } catch (e) {
+                if (!(e instanceof SyntaxError)) {
+                  throw e;
+                }
                 // Skip invalid JSON
               }
             }
@@ -242,8 +258,16 @@ export function StreamingChatAssistant({
       tutorMode,
       messages,
       saveMessage,
+      getToken,
     ]
   );
+
+  useImperativeHandle(ref, () => ({
+    askQuestion: (question: string) => {
+      setIsOpen(true);
+      setTimeout(() => handleSubmit(question), 100);
+    },
+  }), [handleSubmit]);
 
   const handleCancelStream = () => {
     if (abortControllerRef.current) {
@@ -443,4 +467,4 @@ export function StreamingChatAssistant({
       )}
     </div>
   );
-}
+});

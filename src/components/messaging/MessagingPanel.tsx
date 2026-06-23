@@ -21,9 +21,13 @@ export function MessagingPanel({ isOpen, onClose }: MessagingPanelProps) {
   const getOrCreateConversation = useMutation(api.messaging.getOrCreateConversation);
 
   const handleSelectContact = async (contactId: Id<"users">) => {
-    const conversationId = await getOrCreateConversation({ participantId: contactId });
-    setSelectedConversation(conversationId);
-    setShowNewMessage(false);
+    try {
+      const conversationId = await getOrCreateConversation({ participantId: contactId });
+      setSelectedConversation(conversationId);
+      setShowNewMessage(false);
+    } catch (error) {
+      console.error("Failed to create conversation:", error);
+    }
   };
 
   if (!isOpen) return null;

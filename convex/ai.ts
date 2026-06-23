@@ -1,8 +1,6 @@
-"use node";
-
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import OpenAI from "openai";
+import { getClient, callWithFallback } from "./aiRouter";
 
 type RawTestCase = {
   input: string;
@@ -50,17 +48,27 @@ type MultipleChoiceQuestion = {
   explanation: string;
 };
 
-// Lazy OpenAI client — instantiated at call time so missing env vars
-// don't cause module-load failures during Convex deploy analysis.
-let _openai: OpenAI | null = null;
-function getOpenAI(): OpenAI {
-  if (!_openai) {
-    _openai = new OpenAI({
-      apiKey: process.env.CONVEX_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY,
-      baseURL: process.env.CONVEX_OPENAI_BASE_URL ?? undefined,
-    });
+
+
+async function requireAuthenticated(ctx: {
+  auth: { getUserIdentity: () => Promise<unknown> };
+}) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Not authenticated");
   }
-  return _openai;
+}
+
+function assertMaxLength(value: string | undefined, field: string, maxLength: number) {
+  if (value && value.length > maxLength) {
+    throw new Error(`${field} is too long`);
+  }
+}
+
+function assertQuestionCount(questionCount: number, max: number) {
+  if (!Number.isInteger(questionCount) || questionCount < 1 || questionCount > max) {
+    throw new Error(`questionCount must be between 1 and ${max}`);
+  }
 }
 
 export const generateExamQuestions = action({
@@ -74,8 +82,12 @@ export const generateExamQuestions = action({
     ),
     questionCount: v.number(),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    await requireAuthenticated(ctx);
     const { topic, language, difficulty, questionCount } = args;
+    assertQuestionCount(questionCount, 20);
+    assertMaxLength(topic, "topic", 500);
+    assertMaxLength(language, "language", 50);
 
     const prompt = `You are an expert coding instructor. Generate ${questionCount} coding exam questions for ${language} programming at ${difficulty} level.
 
@@ -116,21 +128,23 @@ Requirements:
 - Points: beginner=10-15, intermediate=15-25, advanced=25-30`;
 
     try {
-      const completion = await getOpenAI().chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are a coding exam generator. Return only valid JSON, no markdown formatting.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      });
+      const completion = await callWithFallback((model, client) =>
+        client.chat.completions.create({
+          model,
+          messages: [
+            {
+              role: "system",
+              content: "You are a coding exam generator. Return only valid JSON, no markdown formatting.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+        })
+      );
 
       const responseText = completion.choices[0]?.message?.content || "";
 
@@ -188,8 +202,12 @@ export const generateMultipleChoiceQuestions = action({
     ),
     questionCount: v.number(),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    await requireAuthenticated(ctx);
     const { topic, language, difficulty, questionCount } = args;
+    assertQuestionCount(questionCount, 30);
+    assertMaxLength(topic, "topic", 500);
+    assertMaxLength(language, "language", 50);
 
     const prompt = `Generate ${questionCount} multiple choice questions about ${topic} in ${language} programming at ${difficulty} level.
 
@@ -215,21 +233,23 @@ Requirements:
 - Points: beginner=5-10, intermediate=10-15, advanced=15-20`;
 
     try {
-      const completion = await getOpenAI().chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are a coding quiz generator. Return only valid JSON.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 3000,
-      });
+      const completion = await callWithFallback((model, client) =>
+        client.chat.completions.create({
+          model,
+          messages: [
+            {
+              role: "system",
+              content: "You are a coding quiz generator. Return only valid JSON.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+        })
+      );
 
       const responseText = completion.choices[0]?.message?.content || "";
 
@@ -276,8 +296,13 @@ export const ask = action({
     code: v.optional(v.string()),
     lessonType: v.optional(v.string()),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    await requireAuthenticated(ctx);
     const { message, context, code, lessonType } = args;
+    assertMaxLength(message, "message", 4_000);
+    assertMaxLength(context, "context", 8_000);
+    assertMaxLength(code, "code", 20_000);
+    assertMaxLength(lessonType, "lessonType", 100);
 
     const systemPrompt = `You are a helpful and encouraging coding tutor.
 You are helping a student learn programming.
@@ -301,19 +326,21 @@ STUDENT QUESTION: ${message}
 `;
 
     try {
-      const completion = await getOpenAI().chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        temperature: 0.7,
-        max_tokens: 1000,
-      });
+      const completion = await callWithFallback((model, client) =>
+        client.chat.completions.create({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userContent },
+          ],
+          temperature: 0.7,
+          max_tokens: 800,
+        })
+      );
 
       return {
         success: true,
-        message: completion.choices[0]?.message?.content || "I couldn't generate a response.",
+        suggestion: completion.choices[0]?.message?.content || "I couldn't suggest a fix.",
       };
     } catch (error: unknown) {
       console.error("AI Chat Error:", error);
@@ -334,8 +361,11 @@ export const explainCode = action({
     context: v.optional(v.string()),
     simplify: v.optional(v.boolean()),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    await requireAuthenticated(ctx);
     const { code, context, simplify } = args;
+    assertMaxLength(code, "code", 20_000);
+    assertMaxLength(context, "context", 8_000);
 
     const systemPrompt = simplify
       ? `You are a patient coding tutor explaining code to beginners. Use simple English, avoid jargon, and use analogies when helpful.`
@@ -353,15 +383,17 @@ ${simplify ? "Imagine you're explaining to someone who just started learning pro
 `;
 
     try {
-      const completion = await getOpenAI().chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        temperature: 0.7,
-        max_tokens: 1000,
-      });
+      const completion = await callWithFallback((model, client) =>
+        client.chat.completions.create({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userContent },
+          ],
+          temperature: 0.7,
+          max_tokens: 1000,
+        })
+      );
 
       return {
         success: true,
@@ -383,8 +415,12 @@ export const suggestFix = action({
     error: v.string(),
     context: v.optional(v.string()),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    await requireAuthenticated(ctx);
     const { code, error, context } = args;
+    assertMaxLength(code, "code", 20_000);
+    assertMaxLength(error, "error", 4_000);
+    assertMaxLength(context, "context", 8_000);
 
     const systemPrompt = `You are a helpful debugging assistant. When a student has an error:
 1. Explain what the error means in simple terms
@@ -406,15 +442,17 @@ Please help the student understand and fix this error.
 `;
 
     try {
-      const completion = await getOpenAI().chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        temperature: 0.7,
-        max_tokens: 800,
-      });
+      const completion = await callWithFallback((model, client) =>
+        client.chat.completions.create({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userContent },
+          ],
+          temperature: 0.7,
+          max_tokens: 1000,
+        })
+      );
 
       return {
         success: true,
@@ -441,8 +479,12 @@ export const generateExample = action({
     )),
     context: v.optional(v.string()),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    await requireAuthenticated(ctx);
     const { topic, language, difficulty = "beginner", context } = args;
+    assertMaxLength(topic, "topic", 500);
+    assertMaxLength(language, "language", 50);
+    assertMaxLength(context, "context", 8_000);
 
     const systemPrompt = `You are a coding instructor creating practical examples. Generate clear, working code examples that demonstrate concepts effectively.`;
 
@@ -462,15 +504,17 @@ Return a JSON object with this structure:
 `;
 
     try {
-      const completion = await getOpenAI().chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        temperature: 0.8,
-        max_tokens: 1500,
-      });
+      const completion = await callWithFallback((model, client) =>
+        client.chat.completions.create({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userContent },
+          ],
+          temperature: 0.8,
+          max_tokens: 1500,
+        })
+      );
 
       const responseText = completion.choices[0]?.message?.content || "";
       let cleanedResponse = responseText.trim();
@@ -507,8 +551,12 @@ export const quizStudent = action({
     context: v.string(),
     questionCount: v.optional(v.number()),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    await requireAuthenticated(ctx);
     const { topic, context, questionCount = 3 } = args;
+    assertQuestionCount(questionCount, 10);
+    assertMaxLength(topic, "topic", 500);
+    assertMaxLength(context, "context", 8_000);
 
     const systemPrompt = `You are a quiz generator. Create questions that test understanding, not just memorization.`;
 
@@ -532,15 +580,17 @@ Return JSON:
 `;
 
     try {
-      const completion = await getOpenAI().chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        temperature: 0.7,
-        max_tokens: 1500,
-      });
+      const completion = await callWithFallback((model, client) =>
+        client.chat.completions.create({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userContent },
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+        })
+      );
 
       const responseText = completion.choices[0]?.message?.content || "";
       let cleanedResponse = responseText.trim();

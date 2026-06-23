@@ -27,7 +27,7 @@ export function AICodeExplainer({
         try {
             const result = await onExplain(selectedCode, lessonContext || "");
             setExplanation(result);
-        } catch (error) {
+        } catch {
             setExplanation("Sorry, I couldn't explain this code. Please try again.");
         } finally {
             setIsExplaining(false);
@@ -45,7 +45,7 @@ export function AICodeExplainer({
                 `${lessonContext}\n\nPlease explain this in very simple terms, as if explaining to a beginner.`
             );
             setExplanation(result);
-        } catch (error) {
+        } catch {
             setExplanation("Sorry, I couldn't simplify this explanation. Please try again.");
         } finally {
             setIsExplaining(false);
@@ -63,7 +63,7 @@ export function AICodeExplainer({
                 `${lessonContext}\n\nPlease provide a detailed, in-depth explanation with examples.`
             );
             setExplanation(result);
-        } catch (error) {
+        } catch {
             setExplanation("Sorry, I couldn't provide more details. Please try again.");
         } finally {
             setIsExplaining(false);

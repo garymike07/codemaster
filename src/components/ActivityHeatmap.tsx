@@ -12,6 +12,7 @@ interface ActivityHeatmapProps {
 
 export function ActivityHeatmap({ data, maxCount = 10 }: ActivityHeatmapProps) {
     const weeks = useMemo(() => {
+        if (!data) return [];
         const today = new Date();
         const startDate = new Date(today);
         startDate.setDate(today.getDate() - 364); // Last 52 weeks

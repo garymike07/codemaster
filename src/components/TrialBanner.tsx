@@ -73,7 +73,7 @@ export function TrialBanner({ onUpgrade }: TrialBannerProps) {
               <p className="text-sm text-muted-foreground">
                 {isUrgent 
                   ? "Your trial is ending soon. Upgrade to keep your progress!"
-                  : "You have full access to all features during your trial"
+                  : "You have full access to the JavaScript course during your trial"
                 }
               </p>
             </div>

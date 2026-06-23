@@ -37,12 +37,24 @@ export const saveNotes = mutation({
       .unique();
 
     if (existingNotes) {
-      await ctx.db.patch(existingNotes._id, {
+      // Only patch fields that were explicitly provided to avoid overwriting
+      // existing highlights with undefined (data loss bug).
+      const patch: {
+        content: string;
+        updatedAt: number;
+        highlights?: { text: string; color?: string; note?: string }[];
+        bookmarked?: boolean;
+      } = {
         content: args.content,
-        highlights: args.highlights,
-        bookmarked: args.bookmarked,
         updatedAt: Date.now(),
-      });
+      };
+      if (args.highlights !== undefined) {
+        patch.highlights = args.highlights;
+      }
+      if (args.bookmarked !== undefined) {
+        patch.bookmarked = args.bookmarked;
+      }
+      await ctx.db.patch(existingNotes._id, patch);
       return existingNotes._id;
     } else {
       return await ctx.db.insert("userLessonNotes", {
@@ -55,6 +67,7 @@ export const saveNotes = mutation({
         updatedAt: Date.now(),
       });
     }
+
   },
 });
 

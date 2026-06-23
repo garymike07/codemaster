@@ -16,6 +16,12 @@ export const enroll = mutation({
 
     if (!user) throw new Error("User not found");
 
+    // Verify the course exists before creating an enrollment record.
+    // Without this check, orphaned enrollment records pointing to deleted/invalid
+    // courses can accumulate and cause silent failures downstream.
+    const course = await ctx.db.get(args.courseId);
+    if (!course) throw new Error("Course not found");
+
     const existing = await ctx.db
       .query("enrollments")
       .withIndex("by_user_course", (q) =>
@@ -33,6 +39,7 @@ export const enroll = mutation({
     });
 
     return enrollmentId;
+
   },
 });
 

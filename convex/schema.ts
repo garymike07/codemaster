@@ -49,6 +49,7 @@ export default defineSchema({
   modules: defineTable({
     courseId: v.union(v.id("courses"), v.string()),
     title: v.string(),
+    description: v.optional(v.string()),
     order: v.optional(v.number()),
     // Legacy fields
     moduleIndex: v.optional(v.number()),

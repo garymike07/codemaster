@@ -35,11 +35,15 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const handleSend = async () => {
     if (!message.trim()) return;
 
-    await sendMessage({
-      conversationId,
-      content: message.trim(),
-    });
-    setMessage("");
+    try {
+      await sendMessage({
+        conversationId,
+        content: message.trim(),
+      });
+      setMessage("");
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

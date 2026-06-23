@@ -16,7 +16,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@monaco-editor/react'],
-    exclude: ['@clerk/clerk-react'],
   },
   build: {
     rollupOptions: {

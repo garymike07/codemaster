@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, X, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
+import { DELETE_CONFIRM_TIMEOUT_MS } from "@/lib/constants";
 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
@@ -25,26 +27,30 @@ export default function ExamCentre() {
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [deletingId, setDeletingId] = useState<Id<"exams"> | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<Id<"exams"> | null>(null);
   
+  const { addToast } = useToast();
   const [genConfig, setGenConfig] = useState<GeneratorConfig>({
-    topic: "React Hooks",
+    topic: "Array Methods",
     difficulty: "beginner",
     language: "javascript",
   });
 
   const topics = [
-    "React Hooks",
+    "Variables & Data Types",
+    "Functions & Scope",
     "Array Methods",
-    "String Manipulation",
-    "Async Programming",
+    "Object Manipulation",
+    "String Methods",
     "DOM Manipulation",
-    "Data Structures",
-    "Algorithms",
-    "Object-Oriented Programming",
-    "Functional Programming",
-    "Error Handling",
+    "Events & Listeners",
+    "Async Programming",
+    "Promises & async/await",
     "ES6+ Features",
-    "State Management"
+    "Closures & Hoisting",
+    "Error Handling",
+    "Modules & Imports",
+    "Functional Programming",
   ];
 
   const publishedExams = useQuery(api.examPublishing.getPublishedExams);
@@ -56,6 +62,12 @@ export default function ExamCentre() {
     if (!statusFilter) return true;
     return exam.status === statusFilter;
   });
+
+  useEffect(() => {
+    if (!pendingDeleteId) return;
+    const timeout = setTimeout(() => setPendingDeleteId(null), DELETE_CONFIRM_TIMEOUT_MS);
+    return () => clearTimeout(timeout);
+  }, [pendingDeleteId]);
 
   const getStatusBadge = (status: string, passed?: boolean, score?: number) => {
     switch (status) {
@@ -94,16 +106,22 @@ export default function ExamCentre() {
 
   const handleDelete = async (examId: Id<"exams">, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Are you sure you want to delete this AI challenge? This cannot be undone.")) {
-      setDeletingId(examId);
-      try {
-        await deleteExam({ examId });
-      } catch (error) {
-        console.error("Failed to delete exam:", error);
-        alert("Failed to delete exam");
-      } finally {
-        setDeletingId(null);
-      }
+    if (pendingDeleteId !== examId) {
+      setPendingDeleteId(examId);
+      addToast("Click delete again within 5 seconds to confirm.", "warning");
+      return;
+    }
+
+    setDeletingId(examId);
+    try {
+      await deleteExam({ examId });
+      addToast("Exam deleted successfully.", "success");
+    } catch (error) {
+      console.error("Failed to delete exam:", error);
+      addToast("Failed to delete exam", "error");
+    } finally {
+      setDeletingId(null);
+      setPendingDeleteId(null);
     }
   };
 
@@ -122,7 +140,7 @@ export default function ExamCentre() {
 
       // Fix #11: Validate AI result before using it
       if (!result || !Array.isArray(result.questions) || result.questions.length === 0) {
-        alert("Failed to generate questions: " + (result?.error || "Unknown error"));
+        addToast("Failed to generate questions: " + (result?.error || "Unknown error"), "error");
         return;
       }
       if (result.success && result.questions.length > 0) {
@@ -150,13 +168,13 @@ export default function ExamCentre() {
         setIsGeneratorOpen(false);
         navigate(`/exam-workspace/${examId}`);
       } else {
-        alert("Failed to generate questions: " + (result.error || "Unknown error"));
+        addToast("Failed to generate questions: " + (result.error || "Unknown error"), "error");
       }
     } catch (error) {
       // Fix #13: Show specific error message instead of generic one
       const errorMsg = error instanceof Error ? error.message : "Unknown error";
       console.error(error);
-      alert(`Failed to generate exam: ${errorMsg}`);
+      addToast(`Failed to generate exam: ${errorMsg}`, "error");
     } finally {
       setIsGenerating(false);
     }
@@ -164,12 +182,12 @@ export default function ExamCentre() {
 
   return (
     <DashboardLayout>
-      <div className="container py-8 relative">
+      <div className="container mx-auto px-4 py-8 relative">
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Exam Centre</h1>
+            <h1 className="text-3xl font-bold">JavaScript Quizzes</h1>
             <p className="text-muted-foreground">
-              View and take your published exams
+              Practice what you&apos;ve learned with coding challenges and quizzes
             </p>
           </div>
           <Button 
@@ -236,17 +254,19 @@ export default function ExamCentre() {
                       <option value="advanced">Advanced</option>
                     </select>
                   </div>
-
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Language</label>
                     <select
                       value={genConfig.language}
-                      onChange={(e) => setGenConfig({ ...genConfig, language: e.target.value })}
+                      onChange={(e) =>
+                        setGenConfig({ ...genConfig, language: e.target.value })
+                      }
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={isGenerating}
                     >
                       <option value="javascript">JavaScript</option>
                       <option value="python">Python</option>
+                      <option value="typescript">TypeScript</option>
                       <option value="java">Java</option>
                       <option value="cpp">C++</option>
                     </select>
@@ -381,7 +401,11 @@ export default function ExamCentre() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                      className={`h-8 w-8 transition-opacity ${
+                        pendingDeleteId === exam._id
+                          ? "text-destructive opacity-100"
+                          : "text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                      }`}
                       onClick={(e) => handleDelete(exam._id, e)}
                       disabled={deletingId === exam._id}
                     >

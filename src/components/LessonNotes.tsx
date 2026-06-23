@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, Lightbulb, AlertTriangle } from "lucide-react";
+import { renderSafeMarkdown } from "@/lib/markdown";
 
 interface LessonNotesProps {
     content: string;
@@ -31,26 +32,6 @@ export function LessonNotes({
             newExpanded.add(section);
         }
         setExpandedSections(newExpanded);
-    };
-
-    const renderMarkdown = (text: string) => {
-        return text
-            .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-muted p-4 rounded-lg overflow-x-auto my-4"><code>$2</code></pre>')
-            .replace(/`([^`]+)`/g, '<code class="bg-muted px-2 py-1 rounded text-sm">$1</code>')
-            .replace(/### (.*)/g, '<h3 class="text-xl font-semibold mt-6 mb-3">$1</h3>')
-            .replace(/## (.*)/g, '<h2 class="text-2xl font-semibold mt-8 mb-4">$1</h2>')
-            .replace(/# (.*)/g, '<h1 class="text-3xl font-bold mt-8 mb-4">$1</h1>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/\n\n/g, '</p><p class="my-4">')
-            .replace(/^(.+)$/gm, '<p class="my-2">$1</p>')
-            .replace(/<p><\/p>/g, '')
-            .replace(/<p><h/g, '<h')
-            .replace(/<\/h(\d)><\/p>/g, '</h$1>')
-            .replace(/<p><pre>/g, '<pre>')
-            .replace(/<\/pre><\/p>/g, '</pre>')
-            .replace(/<p>- /g, '<li>')
-            .replace(/<\/li><\/p>/g, '</li>');
     };
 
     return (
@@ -85,7 +66,7 @@ export function LessonNotes({
                 {expandedSections.has("main") && (
                     <div
                         className="prose prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+                        dangerouslySetInnerHTML={{ __html: renderSafeMarkdown(content) }}
                     />
                 )}
             </Card>

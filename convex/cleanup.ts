@@ -4,6 +4,19 @@ import { mutation } from "./_generated/server";
 export const deleteOldCourses = mutation({
   args: {},
   handler: async (ctx) => {
+    // Authorization: only teachers can run destructive cleanup operations
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const caller = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!caller || caller.role !== "teacher") {
+      throw new Error("Forbidden: only teachers can run cleanup operations");
+    }
+
     const courses = await ctx.db.query("courses").collect();
     
     let deleted = 0;

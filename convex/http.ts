@@ -1,8 +1,41 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import OpenAI from "openai";
+import { callWithFallback } from "./aiRouter";
 
 const http = httpRouter();
+const MAX_CODE_LENGTH = 100_000;
+const MAX_STDIN_LENGTH = 20_000;
+const ALLOWED_ORIGINS = new Set(
+  [
+    process.env.APP_ORIGIN,
+    process.env.VITE_APP_ORIGIN,
+  ].filter(Boolean)
+);
+
+function isLocalhost(origin: string): boolean {
+  try {
+    const u = new URL(origin);
+    return u.hostname === "localhost" || u.hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+function corsHeaders(request: Request): HeadersInit {
+  const origin = request.headers.get("Origin") ?? "";
+  const allowedOrigin =
+    (origin && (ALLOWED_ORIGINS.has(origin) || isLocalhost(origin)))
+      ? origin
+      : "http://localhost:5173";
+
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    Vary: "Origin",
+  };
+}
 
 function utf8ToBase64(str: string): string {
   return btoa(unescape(encodeURIComponent(str)));
@@ -22,17 +55,13 @@ http.route({
     if (!identity) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders(request) },
       });
     }
 
     try {
       const body = await request.json();
       const { message, context, code, lessonType, tutorMode, history } = body;
-
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
 
       // Build system prompt based on tutor mode
       const systemPrompts: Record<string, string> = {
@@ -94,14 +123,15 @@ ${code ? `\nStudent's Current Code:\n\`\`\`\n${code}\n\`\`\`` : ""}`;
       // Add current message
       messages.push({ role: "user", content: message });
 
-      // Create streaming response
-      const stream = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages,
-        stream: true,
-        temperature: 0.7,
-        max_tokens: 1000,
-      });
+      const stream = await callWithFallback((model, client) =>
+        client.chat.completions.create({
+          model,
+          messages,
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 1000,
+        })
+      );
 
       // Create a readable stream for SSE
       const encoder = new TextEncoder();
@@ -134,7 +164,7 @@ ${code ? `\nStudent's Current Code:\n\`\`\`\n${code}\n\`\`\`` : ""}`;
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
           Connection: "keep-alive",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders(request),
         },
       });
     } catch (error) {
@@ -145,7 +175,7 @@ ${code ? `\nStudent's Current Code:\n\`\`\`\n${code}\n\`\`\`` : ""}`;
         }),
         {
           status: 500,
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...corsHeaders(request) },
         }
       );
     }
@@ -161,13 +191,31 @@ http.route({
     if (!identity) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders(request) },
       });
     }
 
     try {
       const body = await request.json();
       const { code, language, stdin } = body;
+
+      if (
+        typeof code !== "string" ||
+        typeof language !== "string" ||
+        (stdin !== undefined && typeof stdin !== "string")
+      ) {
+        return new Response(JSON.stringify({ error: "Invalid execution request" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders(request) },
+        });
+      }
+
+      if (code.length > MAX_CODE_LENGTH || (stdin?.length ?? 0) > MAX_STDIN_LENGTH) {
+        return new Response(JSON.stringify({ error: "Execution request is too large" }), {
+          status: 413,
+          headers: { "Content-Type": "application/json", ...corsHeaders(request) },
+        });
+      }
 
       const JUDGE0_API_URL = process.env.JUDGE0_API_URL;
       const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY;
@@ -177,7 +225,7 @@ http.route({
           JSON.stringify({ error: "Code execution not configured" }),
           {
             status: 500,
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...corsHeaders(request) },
           }
         );
       }
@@ -220,6 +268,16 @@ http.route({
         }
       );
 
+      if (!response.ok) {
+        return new Response(
+          JSON.stringify({ error: "Code execution service is unavailable" }),
+          {
+            status: 502,
+            headers: { "Content-Type": "application/json", ...corsHeaders(request) },
+          }
+        );
+      }
+
       const data = await response.json();
 
       // Decode output
@@ -247,7 +305,7 @@ http.route({
         {
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
+            ...corsHeaders(request),
           },
         }
       );
@@ -259,7 +317,7 @@ http.route({
         }),
         {
           status: 500,
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...corsHeaders(request) },
         }
       );
     }
@@ -270,14 +328,10 @@ http.route({
 http.route({
   path: "/api/chat/stream",
   method: "OPTIONS",
-  handler: httpAction(async () => {
+  handler: httpAction(async (_ctx, request) => {
     return new Response(null, {
       status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
+      headers: corsHeaders(request),
     });
   }),
 });
@@ -285,14 +339,10 @@ http.route({
 http.route({
   path: "/api/code/execute",
   method: "OPTIONS",
-  handler: httpAction(async () => {
+  handler: httpAction(async (_ctx, request) => {
     return new Response(null, {
       status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
+      headers: corsHeaders(request),
     });
   }),
 });

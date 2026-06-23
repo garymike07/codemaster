@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { utf8ToBase64, decodeBase64 } from "@/lib/codeExecution";
+import { startTransition, useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -19,6 +18,9 @@ import {
   Save,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-context";
+import { useToast } from "@/hooks/useToast";
+import { useAuth } from "@/hooks/useAuth";
+import { executeRemoteCode } from "@/lib/remoteCodeExecution";
 import type { Id } from "../../convex/_generated/dataModel";
 
 interface TestCase {
@@ -50,6 +52,7 @@ export default function ExamWorkspace() {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { getToken } = useAuth();
 
   const exam = useQuery(
     api.examPublishing.getExamForTaking,
@@ -60,7 +63,7 @@ export default function ExamWorkspace() {
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [startedAt] = useState(Date.now());
+  const [startedAt] = useState(() => Date.now());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,19 +76,23 @@ export default function ExamWorkspace() {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunningTests, setIsRunningTests] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const { addToast } = useToast();
 
   // Initialize timer
   useEffect(() => {
     if (exam) {
-      setTimeLeft(exam.durationMinutes * 60);
-      // Load existing answers if resuming
-      if (exam.existingSubmission?.answers) {
-        const answerMap: Record<string, string> = {};
-        exam.existingSubmission.answers.forEach((a: { questionId: string; answer: string }) => {
-          answerMap[a.questionId] = a.answer;
-        });
-        setAnswers(answerMap);
-      }
+      startTransition(() => {
+        setTimeLeft(exam.durationMinutes * 60);
+        if (exam.existingSubmission?.answers) {
+          const answerMap: Record<string, string> = {};
+          exam.existingSubmission.answers.forEach((a: { questionId: string; answer: string }) => {
+            answerMap[a.questionId] = a.answer;
+          });
+          setAnswers(answerMap);
+          return;
+        }
+        setAnswers({});
+      });
     }
   }, [exam]);
 
@@ -136,14 +143,14 @@ export default function ExamWorkspace() {
       setIsSubmitted(true);
     } catch (error) {
       console.error("Submit error:", error);
-      alert("Failed to submit exam. Please try again.");
+      addToast("Failed to submit exam. Please try again.", "error");
     } finally {
       setIsSubmitting(false);
     }
-  }, [exam, answers, startedAt, submitExam, isSubmitting]);
+  }, [exam, answers, startedAt, submitExam, isSubmitting, addToast]);
 
   // Timer countdown
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval>>(null);
 
   useEffect(() => {
     if (timeLeft === null || timeLeft <= 0 || isSubmitted) return;
@@ -191,42 +198,13 @@ export default function ExamWorkspace() {
 
     for (const testCase of question.testCases) {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_JUDGE0_API_URL}/submissions?base64_encoded=true&wait=true`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-RapidAPI-Key": import.meta.env.VITE_JUDGE0_API_KEY,
-              "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
-            },
-            body: JSON.stringify({
-               source_code: utf8ToBase64(code),
-              // Fix #8: Map language dynamically instead of hardcoding JavaScript (63)
-              language_id: (() => {
-                const languageMap: Record<string, number> = {
-                  javascript: 63,
-                  python: 71,
-                  java: 62,
-                  cpp: 54,
-                  typescript: 74,
-                  csharp: 51,
-                  c: 50,
-                  ruby: 72,
-                  go: 60,
-                  rust: 73,
-                };
-                const q = exam?.questions[currentQuestion] as Question;
-                const lang = (q as { language?: string })?.language ?? "javascript";
-                return languageMap[lang.toLowerCase()] ?? 63;
-              })(),
-              stdin: testCase.input ? btoa(testCase.input) : undefined,
-            }),
-          }
-        );
-
-        const data = await response.json();
-         const actual = data.stdout ? decodeBase64(data.stdout).trim() : data.stderr ? decodeBase64(data.stderr) : "";
+        const data = await executeRemoteCode({
+          code,
+          language: question.language || "javascript",
+          stdin: testCase.input,
+          getToken,
+        });
+        const actual = data.output ? data.output.trim() : data.error;
         const passed = actual === testCase.expectedOutput.trim();
 
         results.push({
@@ -270,7 +248,7 @@ export default function ExamWorkspace() {
             <p className="text-muted-foreground">
               You have already submitted this exam.
             </p>
-            <Button onClick={() => navigate("/exam-centre")}>
+            <Button onClick={() => navigate("/exams")}>
               Back to Exam Centre
             </Button>
           </CardContent>
@@ -317,7 +295,7 @@ export default function ExamWorkspace() {
 
             <Button
               className="w-full"
-              onClick={() => navigate("/exam-centre")}
+              onClick={() => navigate("/exams")}
             >
               Back to Exam Centre
             </Button>

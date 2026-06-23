@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/useToast";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
@@ -26,6 +27,7 @@ export default function ExamRunner() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addToast } = useToast();
   const [result, setResult] = useState<{
     score: number;
     percentageScore: number;
@@ -62,11 +64,11 @@ export default function ExamRunner() {
       setIsSubmitted(true);
     } catch (error) {
       console.error("Submit error:", error);
-      alert("Failed to submit exam. Please try again.");
+      addToast("Failed to submit exam. Please try again.", "error");
     } finally {
       setIsSubmitting(false);
     }
-  }, [answers, exam, startedAt, submitExam, isSubmitting]);
+  }, [answers, exam, startedAt, submitExam, isSubmitting, addToast]);
 
   useEffect(() => {
     if (timeLeft === null || timeLeft <= 0 || isSubmitted) return;
@@ -178,7 +180,7 @@ export default function ExamRunner() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-background px-4 py-3 sticky top-0 z-10">
-        <div className="container flex items-center justify-between">
+        <div className="container mx-auto px-4 flex items-center justify-between">
           <div>
             <h1 className="font-semibold">{exam.title}</h1>
             <p className="text-sm text-muted-foreground">
@@ -198,7 +200,7 @@ export default function ExamRunner() {
         </div>
       </header>
 
-      <div className="container py-8">
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-6">
           {/* Progress */}
           <div className="space-y-2">
@@ -246,7 +248,7 @@ export default function ExamRunner() {
             <CardContent>
               {question.type === "multiple_choice" && question.options && (
                 <div className="space-y-2">
-                  {question.options.map((option, index) => (
+                  {question.options.map((option: string, index: number) => (
                     <button
                       key={index}
                       className={`w-full text-left p-4 rounded-lg border transition-colors ${

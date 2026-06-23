@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { TRIAL_DURATION_DAYS, MS_PER_DAY } from "./constants";
+import { seedAllCourses } from "./ensureSeeded";
 
 export const getOrCreate = mutation({
   args: {
@@ -15,6 +16,23 @@ export const getOrCreate = mutation({
         .query("users")
         .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
         .unique();
+
+      // Auto-seed if no courses exist, or if any course is missing modules (partial-seed recovery)
+      const existingCourses = await ctx.db.query("courses").collect();
+      if (existingCourses.length === 0) {
+        await seedAllCourses(ctx);
+      } else {
+        for (const course of existingCourses) {
+          const mods = await ctx.db
+            .query("modules")
+            .withIndex("by_course", (q) => q.eq("courseId", course._id))
+            .collect();
+          if (mods.length === 0) {
+            await seedAllCourses(ctx);
+            break;
+          }
+        }
+      }
 
       if (existing) {
         // Bug #10: Only patch avatarUrl if it is actually provided
@@ -102,21 +120,7 @@ export const updateRole = mutation({
   },
 });
 
-export const switchRole = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
-      .unique();
-
-    if (!user) throw new Error("User not found");
-
-    const newRole = user.role === "student" ? "teacher" : "student";
-    await ctx.db.patch(user._id, { role: newRole });
-    return newRole;
-  },
-});
+// switchRole has been intentionally removed.
+// Role escalation is a security risk — any authenticated user could previously
+// toggle themselves to "teacher" with a single API call.
+// Role changes must go through the teacher-gated `updateRole` mutation instead.

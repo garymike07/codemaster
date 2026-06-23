@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { useQuery, useMutation } from "convex/react";
@@ -6,26 +6,26 @@ import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/useToast";
 import { Badge } from "@/components/ui/badge";
 import { CourseIcon } from "@/components/ui/course-icon";
-import { MessagingPanel } from "@/components/messaging/MessagingPanel";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { ProgressCharts } from "@/components/ProgressCharts";
+import { DashboardSkeleton } from "@/components/ui/skeleton";
+import { COURSE_CATALOG, coursePath } from "@/lib/constants";
 
 export default function Dashboard() {
-  const [showMessaging, setShowMessaging] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const { addToast } = useToast();
 
   const { user } = useUser();
   const continuelearning = useQuery(api.enrollments.getContinueLearning);
   const enrollments = useQuery(api.enrollments.getMyEnrollments);
   const allProgress = useQuery(api.progress.getAllProgress);
   const courses = useQuery(api.courses.list);
-  const seedCourses = useMutation(api.seed.seedCourses);
   const resetAllProgress = useMutation(api.progress.resetAllProgress);
-  const unreadCount = useQuery(api.messaging.getUnreadCount);
 
   // Gamification data
   const userStats = useQuery(api.gamification.getUserStats);
@@ -34,6 +34,61 @@ export default function Dashboard() {
 
   // Activity data for heatmap
   const activityData = useQuery(api.progress.getActivityHeatmap, { days: 365 });
+
+  const hasPendingDashboardData =
+    continuelearning === undefined ||
+    enrollments === undefined ||
+    allProgress === undefined ||
+    userStats === undefined ||
+    streak === undefined ||
+    userBadges === undefined ||
+    activityData === undefined;
+
+  useEffect(() => {
+    if (!hasPendingDashboardData) {
+      setLoadingTimedOut(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setLoadingTimedOut(true);
+    }, 8000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [hasPendingDashboardData]);
+
+  if (hasPendingDashboardData && !loadingTimedOut) {
+    return <DashboardSkeleton />;
+  }
+
+  if (hasPendingDashboardData && loadingTimedOut) {
+    return (
+      <Card className="border-destructive/50 bg-destructive/5">
+        <CardHeader>
+          <CardTitle className="text-destructive">Unable to load dashboard data</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            The dashboard is still waiting for your local Convex backend. Make sure `bunx convex dev`
+            is running and that `VITE_CONVEX_URL` points to an active local deployment.
+          </p>
+          <div className="rounded-md border bg-background/60 p-3 text-sm">
+            <p><strong>Configured backend:</strong> {import.meta.env.VITE_CONVEX_URL ?? "Not set"}</p>
+            <p><strong>Expected local command:</strong> <code>bunx convex dev</code></p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+            <Button
+              variant="outline"
+              onClick={() => window.open("https://docs.convex.dev/quickstart", "_blank", "noopener,noreferrer")}
+            >
+              Convex Setup Help
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const stats = {
     totalCourses: enrollments?.length ?? 0,
@@ -47,19 +102,6 @@ export default function Dashboard() {
         : 0,
   };
 
-  // Fix #20: Add loading state and error handling to handleSeed
-  const handleSeed = async () => {
-    setIsSeeding(true);
-    try {
-      await seedCourses();
-    } catch (e) {
-      console.error("Seeding failed:", e);
-      alert("Failed to seed courses. Please try again.");
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
   const handleResetProgress = async () => {
     setIsResetting(true);
     try {
@@ -67,6 +109,7 @@ export default function Dashboard() {
       setShowResetConfirm(false);
     } catch (error) {
       console.error("Failed to reset progress:", error);
+      addToast("Failed to reset progress. Please try again.", "error");
     } finally {
       setIsResetting(false);
     }
@@ -77,8 +120,6 @@ export default function Dashboard() {
     return names[Math.min(level - 1, names.length - 1)] || "Novice";
   };
 
-
-
   return (
     <div className="space-y-8">
       {/* Welcome */}
@@ -88,15 +129,8 @@ export default function Dashboard() {
             Welcome back, {user?.firstName ?? "Learner"}!
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Continue your learning journey
+            Pick up your JavaScript course where you left off
           </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {courses?.length === 0 && (
-            <Button onClick={handleSeed} size="sm" disabled={isSeeding}>
-              {isSeeding ? "Seeding..." : "🌱 Seed Sample"}
-            </Button>
-          )}
         </div>
       </div>
 
@@ -105,7 +139,6 @@ export default function Dashboard() {
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="emoji-icon">📖</span>
               Continue Learning
             </div>
           </CardHeader>
@@ -117,7 +150,7 @@ export default function Dashboard() {
                 </h3>
                 {continuelearning.currentLesson && (
                   <p className="text-muted-foreground text-sm">
-                    {(continuelearning.currentLesson as { title: string }).title}
+                    {continuelearning.currentLesson.title}
                   </p>
                 )}
                 <div className="flex items-center gap-4">
@@ -133,7 +166,7 @@ export default function Dashboard() {
               <Link
                 to={
                   continuelearning.currentLesson
-                    ? `/lesson/${(continuelearning.currentLesson as { _id: string })._id}`
+                    ? `/lesson/${continuelearning.currentLesson._id}`
                     : `/course/${continuelearning.course.slug}`
                 }
               >
@@ -304,7 +337,7 @@ export default function Dashboard() {
           <h2 className="text-xl font-semibold">My Courses</h2>
           <Link to="/courses">
             <Button variant="ghost" size="sm" className="gap-1">
-              View All
+              Browse Catalog
               <span className="emoji-icon">→</span>
             </Button>
           </Link>
@@ -356,44 +389,36 @@ export default function Dashboard() {
               <span className="emoji-icon text-5xl block mb-4">📚</span>
               <h3 className="font-semibold mb-2">No courses yet</h3>
               <p className="text-muted-foreground mb-4">
-                Start your learning journey by enrolling in a course
+                Choose from {COURSE_CATALOG.length} courses across JavaScript, Python, and AI
               </p>
               <Link to="/courses">
-                <Button>📖 Browse Courses</Button>
+                <Button className="min-h-11">Browse Courses</Button>
               </Link>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* Browse Available Courses */}
       {courses && courses.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Available Courses</h2>
+            <h2 className="text-xl font-semibold">Explore Courses</h2>
             <Link to="/courses">
-              <Button variant="ghost" size="sm" className="gap-1">
-                View All ({courses.length})
-                <span className="emoji-icon">→</span>
-              </Button>
+              <Button variant="ghost" size="sm">View all</Button>
             </Link>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {courses
-              .filter((course) => !enrollments?.some((e) => e.courseId === course._id))
-              .slice(0, 8)
+              .filter((c) => !enrollments?.some((e) => e.courseId === c._id))
+              .slice(0, 6)
               .map((course) => (
-                <Link key={course._id} to={`/course/${course.slug}`}>
-                  <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3">
-                        <CourseIcon icon={course.icon} size="md" />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm truncate">{course.title}</h3>
-                          <p className="text-xs text-muted-foreground capitalize">
-                            {course.difficulty} · {course.totalLessons} lessons
-                          </p>
-                        </div>
+                <Link key={course._id} to={coursePath(course.slug ?? "")}>
+                  <Card className="hover:border-primary/50 transition-colors h-full">
+                    <CardContent className="pt-6 flex items-center gap-3">
+                      <CourseIcon icon={course.icon} size="md" />
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-sm truncate">{course.title}</h3>
+                        <p className="text-xs text-muted-foreground">{course.totalLessons} lessons</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -408,17 +433,17 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span className="emoji-icon">📋</span>
-              Exam Centre
+              <span className="emoji-icon">💻</span>
+              Practice Playground
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              View and take published exams
+              Experiment with JavaScript code outside of lessons
             </p>
-            <Link to="/exam-centre">
-              <Button variant="outline" className="w-full">
-                📝 Go to Exam Centre
+            <Link to="/playground">
+              <Button variant="outline" className="w-full min-h-11">
+                Open Playground
               </Button>
             </Link>
           </CardContent>
@@ -426,24 +451,19 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span className="emoji-icon">💬</span>
-              Messages
-              {unreadCount && unreadCount > 0 && (
-                <Badge className="ml-auto">{unreadCount}</Badge>
-              )}
+              <span className="emoji-icon">📋</span>
+              JavaScript Quizzes
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              Chat with your teachers
+              Test your knowledge with coding challenges
             </p>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setShowMessaging(true)}
-            >
-              📨 Open Messages
-            </Button>
+            <Link to="/exams">
+              <Button variant="outline" className="w-full min-h-11">
+                Take a Quiz
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
@@ -496,12 +516,6 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
-
-      {/* Messaging Panel */}
-      <MessagingPanel
-        isOpen={showMessaging}
-        onClose={() => setShowMessaging(false)}
-      />
     </div>
   );
 }

@@ -7,34 +7,6 @@
     <title>CodeMaster - Learn to Code</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script>
-      // CRITICAL: Prevent AMD/UMD module conflicts between Monaco and Clerk
-      (function() {
-        // Monaco worker configuration
-        window.MonacoEnvironment = {
-          getWorkerUrl: function (moduleId, label) {
-            return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
-              self.MonacoEnvironment = { baseUrl: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/' };
-              importScripts('https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/base/worker/workerMain.js');
-            `)}`;
-          }
-        };
-        
-        // Intercept and fix AMD define conflicts
-        // This runs BEFORE any scripts load
-        Object.defineProperty(window, 'define', {
-          get: function() { return this._define; },
-          set: function(val) {
-            this._define = val;
-            // When Monaco sets define.amd, mark it
-            if (val && val.amd) {
-              this._monacoDefine = val;
-            }
-          },
-          configurable: true
-        });
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>

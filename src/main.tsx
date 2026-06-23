@@ -6,6 +6,7 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { useAuth } from "@clerk/clerk-react";
 import { ThemeProvider } from "./components/theme-provider";
+import { ToastProvider } from "./hooks/useToast";
 import App from "./App";
 import "./index.css";
 
@@ -35,7 +36,7 @@ function SetupGuide() {
         )}
         {!CONVEX_URL && (
           <p style={{ fontSize: "0.875rem" }}>
-            1. Run <code>npx convex dev</code> to start the local backend<br />
+            1. Run <code>bunx convex dev</code> to start the local backend<br />
             2. Copy the deployment URL and add <code>VITE_CONVEX_URL=...</code> to <code>.env.local</code>
           </p>
         )}
@@ -100,9 +101,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           <ThemeProvider defaultTheme="dark" storageKey="codemaster-theme">
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
+            <ToastProvider>
+              <BrowserRouter>
+                <App />
+              </BrowserRouter>
+            </ToastProvider>
           </ThemeProvider>
         </ConvexProviderWithClerk>
       </ClerkProvider>

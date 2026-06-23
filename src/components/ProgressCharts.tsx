@@ -11,7 +11,7 @@ interface ProgressChartProps {
 
 export function ProgressCharts({ totalXp, level, lessonsCompleted, challengesCompleted, examsPassed }: ProgressChartProps) {
     const xpForNextLevel = useMemo(() => {
-        return level * 1000; // Simple formula: each level requires level * 1000 XP
+        return Math.max(level, 1) * 1000; // Simple formula: each level requires level * 1000 XP
     }, [level]);
 
     const currentLevelXp = useMemo(() => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { startTransition, useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -11,14 +11,17 @@ import { useTheme } from "@/components/theme-context";
 import ChatAssistant from "@/components/ChatAssistant";
 import { EnhancedTestResults } from "@/components/EnhancedTestResults";
 import { EditorControls } from "@/components/EditorControls";
+import { useToast } from "@/hooks/useToast";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { useAuth } from "@/hooks/useAuth";
 import { LessonNotes } from "@/components/LessonNotes";
 import { ExampleCarousel } from "@/components/ExampleCarousel";
 import { AICodeExplainer } from "@/components/AICodeExplainer";
 import { KeyTakeawaysPanel } from "@/components/KeyTakeawaysPanel";
+import { LoadingSpinner } from "@/components/common";
 import { BookOpen, Code2, Lightbulb, Play, FileText } from "lucide-react";
-import { isExecutableLanguage, getJudge0LanguageId, getMonacoLanguage } from "@/lib/languageSupport";
-import { utf8ToBase64 } from "@/lib/codeExecution";
+import { isExecutableLanguage, getMonacoLanguage } from "@/lib/languageSupport";
+import { executeRemoteCode } from "@/lib/remoteCodeExecution";
 
 interface TestResult {
   passed: boolean;
@@ -29,6 +32,7 @@ interface TestResult {
 export default function LessonPlayer() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const { theme } = useTheme();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
 
   const lesson = useQuery(
@@ -48,7 +52,18 @@ export default function LessonPlayer() {
   const [activeMainTab, setActiveMainTab] = useState("notes");
   const [activeEditorTab, setActiveEditorTab] = useState("output");
   const [mobileView, setMobileView] = useState<"content" | "editor">("content");
-  const [selectedCode] = useState("");
+  const [selectedCode, setSelectedCode] = useState("");
+  const editorRef = useRef<any>(null);
+
+  const handleEditorMount = useCallback((editor: any) => {
+    editorRef.current = editor;
+    editor.onDidChangeCursorSelection((e: any) => {
+      const model = editor.getModel();
+      if (!model) return;
+      const txt = model.getValueInRange(e.selection);
+      setSelectedCode(txt?.trim() ? txt : editor.getValue());
+    });
+  }, []);
   const isSubmittingRef = useRef(false);
 
   // Editor State
@@ -59,6 +74,7 @@ export default function LessonPlayer() {
   const explainCodeAction = useAction(api.ai.explainCode);
   const quizStudentAction = useAction(api.ai.quizStudent);
 
+  const { addToast } = useToast();
   useKeyboardShortcut({
     key: "Enter",
     ctrlKey: true,
@@ -68,17 +84,16 @@ export default function LessonPlayer() {
   const markComplete = useMutation(api.progress.markLessonComplete);
 
   useEffect(() => {
-    if (lesson?.codeTemplate) {
-      setCode(lesson.codeTemplate);
+    const codeTemplate = lesson?.codeTemplate;
+    if (codeTemplate) {
+      startTransition(() => {
+        setCode(codeTemplate);
+      });
     }
   }, [lesson]);
 
   if (!lesson) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen label="Loading lesson" />;
   }
 
   // Check if this lesson's language supports code execution
@@ -91,32 +106,18 @@ export default function LessonPlayer() {
     setActiveEditorTab("output");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_JUDGE0_API_URL}/submissions?base64_encoded=true&wait=true`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-RapidAPI-Key": import.meta.env.VITE_JUDGE0_API_KEY,
-            "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
-          },
-          body: JSON.stringify({
-            source_code: utf8ToBase64(code),
-            language_id: getJudge0LanguageId(lesson?.language),
-          }),
-        }
-      );
+      const data = await executeRemoteCode({
+        code,
+        language: lesson?.language || "javascript",
+        getToken,
+      });
 
-      const data = await response.json();
-
-      if (data.stdout) {
-        setOutput(atob(data.stdout));
-      } else if (data.stderr) {
-        setOutput(`Error: ${atob(data.stderr)}`);
-      } else if (data.compile_output) {
-        setOutput(`Compile Error: ${atob(data.compile_output)}`);
+      if (data.output) {
+        setOutput(data.output);
+      } else if (data.error) {
+        setOutput(`Error: ${data.error}`);
       } else {
-        setOutput(data.status?.description || "No output");
+        setOutput(data.status || "No output");
       }
     } catch (error) {
       setOutput(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -140,31 +141,19 @@ export default function LessonPlayer() {
 
     for (const testCase of lesson.testCases) {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_JUDGE0_API_URL}/submissions?base64_encoded=true&wait=true`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-RapidAPI-Key": import.meta.env.VITE_JUDGE0_API_KEY,
-              "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
-            },
-            body: JSON.stringify({
-              source_code: utf8ToBase64(code),
-              language_id: getJudge0LanguageId(lesson?.language),
-              stdin: testCase.input ? utf8ToBase64(testCase.input) : undefined,
-            }),
-          }
-        );
-
-        const data = await response.json();
-        const actual = data.stdout ? atob(data.stdout).trim() : "";
+        const data = await executeRemoteCode({
+          code,
+          language: lesson?.language || "javascript",
+          stdin: testCase.input,
+          getToken,
+        });
+        const actual = data.output.trim();
         const passed = actual === testCase.expectedOutput.trim();
 
         results.push({
           passed,
           expected: testCase.expectedOutput,
-          actual: actual || (data.stderr ? atob(data.stderr) : "No output"),
+          actual: actual || data.error || "No output",
         });
       } catch (error) {
         results.push({
@@ -214,15 +203,16 @@ export default function LessonPlayer() {
       const nextLesson = courseLessons[currentIndex + 1];
       navigate(`/lesson/${nextLesson._id}`);
     } else {
-      navigate(`/course/${lesson.courseId}?completed=true`);
+      navigate("/courses?completed=true");
     }
   };
 
   const handleExplainCode = async (codeToExplain: string, context: string) => {
+    const shouldSimplify = context.toLowerCase().includes("simple") || context.toLowerCase().includes("beginner");
     const result = await explainCodeAction({
       code: codeToExplain,
       context: context || lesson.content,
-      simplify: false,
+      simplify: shouldSimplify,
     });
     return result.success ? result.explanation || "" : "Failed to explain code";
   };
@@ -243,7 +233,7 @@ export default function LessonPlayer() {
       // For now, just log the questions. In a full implementation,
       // you'd show them in a modal or separate component
       console.log("Quiz questions:", result.questions);
-      alert(`Generated ${result.questions.length} quiz questions! Check console for details.`);
+      addToast(`Generated ${result.questions.length} quiz questions! Check console for details.`, "success");
     }
   };
 
@@ -252,7 +242,7 @@ export default function LessonPlayer() {
       {/* Header */}
       <header className="border-b border-border bg-background px-2 md:px-4 py-2 md:py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
-          <Link to={`/course/${lesson.courseId}`}>
+          <Link to="/courses">
             <Button variant="ghost" size="sm" className="gap-1 md:gap-2 px-2 md:px-3">
               <span className="emoji-icon">←</span>
               <span className="hidden sm:inline">Back</span>
@@ -332,7 +322,7 @@ export default function LessonPlayer() {
                 <ExampleCarousel
                   examples={lesson.examples}
                   onLoadExample={handleLoadExample}
-                  onAskAI={handleExplainCode}
+                  onAskAI={(question, code) => handleExplainCode(code, question)}
                 />
               </TabsContent>
             )}
@@ -345,13 +335,11 @@ export default function LessonPlayer() {
                     Use the code editor on the right to complete this challenge.
                     Run your code to test it, then submit when ready.
                   </p>
-                  {selectedCode && (
-                    <AICodeExplainer
-                      selectedCode={selectedCode}
-                      lessonContext={lesson.content}
-                      onExplain={handleExplainCode}
-                    />
-                  )}
+                  <AICodeExplainer
+                    selectedCode={selectedCode || code}
+                    lessonContext={lesson.content}
+                    onExplain={handleExplainCode}
+                  />
                 </div>
               </TabsContent>
             )}
@@ -395,6 +383,7 @@ export default function LessonPlayer() {
                   theme={theme === "dark" ? "vs-dark" : "light"}
                   value={code}
                   onChange={(value) => setCode(value ?? "")}
+                  onMount={handleEditorMount}
                   options={{
                     minimap: { enabled: false },
                     fontSize: fontSize,

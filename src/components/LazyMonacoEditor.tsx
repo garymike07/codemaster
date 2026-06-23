@@ -1,24 +1,56 @@
 import { lazy, Suspense } from "react";
+import { loader } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
+import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
+import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
+import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
+import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
+import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 
-// Singleton to ensure Monaco is only initialized once
-let monacoInitialized = false;
+type MonacoEnvironmentWithWorkers = typeof globalThis & {
+  MonacoEnvironment?: {
+    getWorker: (_moduleId: string, label: string) => Worker;
+  };
+};
 
-// Lazy load Monaco Editor - don't import loader at top level to avoid AMD conflicts with Clerk
-const MonacoEditor = lazy(async () => {
-  // Dynamically import the loader only when needed
-  const { loader } = await import("@monaco-editor/react");
-  
-  // Configure Monaco only once to prevent duplicate module definitions
-  if (!monacoInitialized) {
-    loader.config({
-      paths: {
-        vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs",
-      },
-    });
-    monacoInitialized = true;
+let monacoConfigured = false;
+
+function configureMonaco() {
+  if (monacoConfigured) {
+    return;
   }
-  
-  // Return the Editor component
+
+  const monacoGlobal = globalThis as MonacoEnvironmentWithWorkers;
+
+  monacoGlobal.MonacoEnvironment = {
+    getWorker(_moduleId, label) {
+      switch (label) {
+        case "json":
+          return new jsonWorker();
+        case "css":
+        case "scss":
+        case "less":
+          return new cssWorker();
+        case "html":
+        case "handlebars":
+        case "razor":
+          return new htmlWorker();
+        case "typescript":
+        case "javascript":
+          return new tsWorker();
+        default:
+          return new editorWorker();
+      }
+    },
+  };
+
+  loader.config({ monaco });
+  monacoConfigured = true;
+}
+
+configureMonaco();
+
+const MonacoEditor = lazy(async () => {
   const mod = await import("@monaco-editor/react");
   return { default: mod.Editor };
 });
@@ -29,6 +61,7 @@ interface LazyMonacoEditorProps {
   value?: string;
   theme?: string;
   onChange?: (value: string | undefined) => void;
+  onMount?: (editor: unknown) => void;
   options?: Record<string, unknown>;
   className?: string;
 }
@@ -39,6 +72,7 @@ export function LazyMonacoEditor({
   value = "",
   theme = "vs-dark",
   onChange,
+  onMount,
   options = {},
   className,
 }: LazyMonacoEditorProps) {
@@ -59,6 +93,7 @@ export function LazyMonacoEditor({
         value={value}
         theme={theme}
         onChange={onChange}
+        onMount={onMount}
         options={{
           minimap: { enabled: false },
           fontSize: 14,

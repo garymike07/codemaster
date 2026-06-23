@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/useToast";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CourseIcon } from "@/components/ui/course-icon";
@@ -49,6 +51,21 @@ export default function CourseDetail() {
   );
 
   const enroll = useMutation(api.enrollments.enroll);
+  const ensureSeeded = useMutation(api.ensureSeeded.run);
+  const { addToast } = useToast();
+
+  const modulesEmpty =
+    courseWithModules &&
+    (!courseWithModules.modules || courseWithModules.modules.length === 0);
+
+  useEffect(() => {
+    if (!modulesEmpty) return;
+    ensureSeeded()
+      .then((r) => {
+        if (r.message) console.log("Auto-repair:", r.message);
+      })
+      .catch((e) => console.error("Auto-repair failed:", e));
+  }, [modulesEmpty, ensureSeeded]);
 
   if (!course) {
     return (
@@ -67,7 +84,7 @@ export default function CourseDetail() {
       await enroll({ courseId: course._id });
     } catch (error) {
       console.error("Enrollment failed:", error);
-      alert("Failed to enroll. Please try again.");
+      addToast("Failed to enroll. Please try again.", "error");
     }
   };
 

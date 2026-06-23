@@ -1,0 +1,9 @@
+dist
+node_modules
+convex/_generated
+convex/seed
+*.svg
+*.png
+*.jpg
+*.ico
+package-lock.json

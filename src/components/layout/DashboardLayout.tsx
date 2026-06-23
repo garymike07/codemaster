@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useMutation } from "convex/react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../../convex/_generated/api";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { TrialBanner } from "@/components/TrialBanner";
 import { Button } from "@/components/ui/button";
+import { AutoSeeder } from "@/components/AutoSeeder";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,7 +15,6 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, isLoaded } = useUser();
   const getOrCreateUser = useMutation(api.users.getOrCreate);
-  const navigate = useNavigate();
   const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,7 +31,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [isLoaded, user, getOrCreateUser]);
 
-  // Bug #7: Show error UI if user initialization fails
   if (initError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -46,10 +44,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <AutoSeeder />
       <Navbar />
-      <main className="container py-6 flex-1">
-        {/* Bug #3 & #11: Use React Router navigate instead of window.open */}
-        <TrialBanner onUpgrade={() => navigate('/pricing')} />
+      <main className="container mx-auto px-4 py-6 flex-1">
+        <TrialBanner />
         {children}
       </main>
       <Footer />

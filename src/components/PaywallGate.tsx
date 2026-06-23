@@ -17,6 +17,7 @@ export function PaywallGate({
   fallback,
   onUpgrade 
 }: PaywallGateProps) {
+  const navigate = useNavigate();
   const { isLoading, hasAccess, reason } = useHasAccess(feature);
 
   if (isLoading) {
@@ -49,7 +50,7 @@ export function PaywallGate({
           : "This feature requires an active subscription."
         }
       </p>
-      <Button onClick={onUpgrade}>
+      <Button onClick={onUpgrade ?? (() => navigate("/upgrade"))}>
         Upgrade to Premium
       </Button>
     </div>
