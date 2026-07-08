@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@import 'tailwindcss';
 
 @layer base {
   :root {
@@ -25,9 +25,9 @@
     --border: 210 15% 88%;
     --input: 210 15% 88%;
     --ring: 190 85% 50%;
-    --radius: 0.5rem;
+    --radius: 0rem;
 
-    --font-size-base: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+    --font-size-base: clamp(0.75rem, 0.75rem + 0.15vw, 0.8125rem);
     --font-size-h1: clamp(2.5rem, 4vw, 4.5rem);
     --font-size-h2: clamp(2rem, 3vw, 3.5rem);
     --font-size-h3: clamp(1.75rem, 2.5vw, 2.5rem);
@@ -67,11 +67,15 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-family:
+      'Inter',
+      system-ui,
+      -apple-system,
+      sans-serif;
     font-size: var(--font-size-base);
     line-height: 1.6;
     font-weight: 400;
-    font-feature-settings: "liga", "calt", "kern";
+    font-feature-settings: 'liga', 'calt', 'kern';
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -82,22 +86,45 @@
     background-repeat: no-repeat;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      'Inter',
+      system-ui,
+      -apple-system,
+      sans-serif;
     font-weight: 700;
     letter-spacing: -0.025em;
     line-height: 1.15;
   }
 
-  h1 { font-size: var(--font-size-h1); }
-  h2 { font-size: var(--font-size-h2); }
-  h3 { font-size: var(--font-size-h3); }
-  h4 { font-size: var(--font-size-h4); }
-  h5 { font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.3rem); }
-  h6 { font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.15rem); }
+  h1 {
+    font-size: var(--font-size-h1);
+  }
+  h2 {
+    font-size: var(--font-size-h2);
+  }
+  h3 {
+    font-size: var(--font-size-h3);
+  }
+  h4 {
+    font-size: var(--font-size-h4);
+  }
+  h5 {
+    font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.3rem);
+  }
+  h6 {
+    font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.15rem);
+  }
 
-  code, pre, .font-mono {
-    font-family: "Space Mono", "SF Mono", Monaco, "Cascadia Code", monospace;
+  code,
+  pre,
+  .font-mono {
+    font-family: 'Space Mono', 'SF Mono', Monaco, 'Cascadia Code', monospace;
   }
 }
 
@@ -121,12 +148,12 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "Space Mono", "SF Mono", Monaco, "Cascadia Code", monospace;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', 'SF Mono', Monaco, 'Cascadia Code', monospace;
 }
 
 @keyframes marquee {
@@ -149,7 +176,9 @@
 
 /* Force colorful emojis */
 .emoji-icon {
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif;
+  font-family:
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', 'Android Emoji',
+    'EmojiSymbols', sans-serif;
   display: inline-block;
   font-style: normal;
   vertical-align: middle;
@@ -276,4 +305,3 @@
 .border-success {
   border-color: hsl(var(--success));
 }
-

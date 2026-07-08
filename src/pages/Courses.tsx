@@ -1,25 +1,25 @@
-import { useMemo, useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { Link } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { CourseIcon } from "@/components/ui/course-icon";
-import { BookOpen, Clock, BarChart3, Search, Database, RefreshCw } from "lucide-react";
-import { COURSE_CATALOG, TRACKS, coursePath, type CourseTrack } from "@/lib/constants";
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { Link } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { CourseIcon } from '@/components/ui/course-icon';
+import { BookOpen, Clock, BarChart3, Search, Database, RefreshCw } from 'lucide-react';
+import { COURSE_CATALOG, TRACKS, coursePath, type CourseTrack } from '@/lib/constants';
 
 const difficultyColors = {
-  beginner: "bg-green-500/20 text-green-500",
-  intermediate: "bg-yellow-500/20 text-yellow-500",
-  advanced: "bg-red-500/20 text-red-500",
+  beginner: 'bg-green-500/20 text-green-500',
+  intermediate: 'bg-yellow-500/20 text-yellow-500',
+  advanced: 'bg-red-500/20 text-red-500',
 };
 
 export default function Courses() {
-  const [trackFilter, setTrackFilter] = useState<CourseTrack | "all">("all");
-  const [search, setSearch] = useState("");
+  const [trackFilter, setTrackFilter] = useState<CourseTrack | 'all'>('all');
+  const [search, setSearch] = useState('');
   const [isSeeding, setIsSeeding] = useState(false);
   const seedAttemptedRef = useRef(false);
   const { isSignedIn } = useUser();
@@ -45,8 +45,7 @@ export default function Courses() {
     if (!courses) return undefined;
     return courses.filter((course) => {
       const meta = COURSE_CATALOG.find((c) => c.slug === course.slug);
-      const matchesTrack =
-        trackFilter === "all" || meta?.track === trackFilter;
+      const matchesTrack = trackFilter === 'all' || meta?.track === trackFilter;
       const q = search.trim().toLowerCase();
       const matchesSearch =
         !q ||
@@ -61,7 +60,8 @@ export default function Courses() {
       <div>
         <h1 className="text-3xl font-bold">Course Catalog</h1>
         <p className="text-muted-foreground">
-          JavaScript, Python, and AI — {COURSE_CATALOG.length} structured courses with interactive lessons
+          JavaScript, Python, and AI — {COURSE_CATALOG.length} structured courses with interactive
+          lessons
         </p>
       </div>
 
@@ -80,9 +80,9 @@ export default function Courses() {
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
-            variant={trackFilter === "all" ? "secondary" : "outline"}
+            variant={trackFilter === 'all' ? 'secondary' : 'outline'}
             className="min-h-11"
-            onClick={() => setTrackFilter("all")}
+            onClick={() => setTrackFilter('all')}
           >
             All tracks
           </Button>
@@ -90,7 +90,7 @@ export default function Courses() {
             <Button
               key={track.id}
               size="sm"
-              variant={trackFilter === track.id ? "secondary" : "outline"}
+              variant={trackFilter === track.id ? 'secondary' : 'outline'}
               className="min-h-11"
               onClick={() => setTrackFilter(track.id)}
             >
@@ -101,11 +101,11 @@ export default function Courses() {
       </div>
 
       {!courses && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i}>
-              <CardContent className="pt-6">
-                <div className="space-y-4 animate-pulse">
+              <CardContent className="pt-4">
+                <div className="space-y-3 animate-pulse">
                   <div className="h-12 w-12 rounded-lg bg-muted" />
                   <div className="h-6 w-3/4 bg-muted rounded" />
                   <div className="h-4 w-full bg-muted rounded" />
@@ -117,7 +117,7 @@ export default function Courses() {
       )}
 
       {filteredCourses && filteredCourses.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredCourses.map((course) => {
             const enrollment = getEnrollmentForCourse(course._id);
             const progress = getProgressForCourse(course._id);
@@ -125,10 +125,10 @@ export default function Courses() {
             const isEnrolled = !!enrollment;
 
             return (
-              <Link key={course._id} to={coursePath(course.slug ?? "")}>
+              <Link key={course._id} to={coursePath(course.slug ?? '')}>
                 <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
+                  <CardContent className="pt-4">
+                    <div className="space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <CourseIcon icon={course.icon} size="lg" />
                         <div className="flex flex-col items-end gap-1">
@@ -210,8 +210,9 @@ export default function Courses() {
             <Database className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h3 className="font-semibold mb-2">No courses found</h3>
             <p className="text-muted-foreground text-sm mb-4">
-              Courses will auto-seed when the backend finishes syncing.
-              You can also run <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">bun run seed</code> to populate the database immediately.
+              Courses will auto-seed when the backend finishes syncing. You can also run{' '}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">bun run seed</code>{' '}
+              to populate the database immediately.
             </p>
             <Button
               variant="outline"
@@ -224,8 +225,8 @@ export default function Courses() {
                   .finally(() => setIsSeeding(false));
               }}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isSeeding ? "animate-spin" : ""}`} />
-              {isSeeding ? "Seeding..." : "Seed Now"}
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSeeding ? 'animate-spin' : ''}`} />
+              {isSeeding ? 'Seeding...' : 'Seed Now'}
             </Button>
           </CardContent>
         </Card>

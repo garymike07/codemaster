@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { UserButton } from "@clerk/clerk-react";
-import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/ui/logo";
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { UserButton } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/ui/logo';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -12,14 +12,14 @@ import {
   Moon,
   Menu,
   X,
-} from "lucide-react";
-import { useTheme } from "@/components/theme-context";
+} from 'lucide-react';
+import { useTheme } from '@/components/theme-context';
 
 const navIconMap: Record<string, React.ElementType> = {
-  "/dashboard": LayoutDashboard,
-  "/courses": GraduationCap,
-  "/playground": Code2,
-  "/exams": ClipboardCheck,
+  '/dashboard': LayoutDashboard,
+  '/courses': GraduationCap,
+  '/playground': Code2,
+  '/exams': ClipboardCheck,
 };
 
 export function Navbar() {
@@ -28,15 +28,15 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
 
   const navItems = [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/courses", label: "Courses" },
-    { href: "/playground", label: "Practice" },
-    { href: "/exams", label: "Quizzes" },
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/courses', label: 'Courses' },
+    { href: '/playground', label: 'Practice' },
+    { href: '/exams', label: 'Quizzes' },
   ];
 
   const isNavActive = (href: string) => {
-    if (href === "/courses") {
-      return location.pathname === "/courses" || location.pathname.startsWith("/course/");
+    if (href === '/courses') {
+      return location.pathname === '/courses' || location.pathname.startsWith('/course/');
     }
     return location.pathname === href || location.pathname.startsWith(`${href}/`);
   };
@@ -44,7 +44,11 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 flex h-14 items-center">
-        <Link to="/dashboard" className="mr-4 md:mr-6 flex items-center gap-3" aria-label="CodeMaster home">
+        <Link
+          to="/dashboard"
+          className="mr-4 md:mr-6 flex items-center gap-3"
+          aria-label="CodeMaster home"
+        >
           <Logo />
         </Link>
 
@@ -55,7 +59,7 @@ export function Navbar() {
             return (
               <Button
                 key={item.href}
-                variant={isActive ? "secondary" : "ghost"}
+                variant={isActive ? 'secondary' : 'ghost'}
                 size="sm"
                 className="gap-2 min-h-11"
                 asChild
@@ -76,7 +80,7 @@ export function Navbar() {
           className="md:hidden mr-2 min-h-11 min-w-11"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-expanded={mobileMenuOpen}
-          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
         >
           {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
@@ -86,25 +90,48 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             className="min-h-11 min-w-11"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "h-8 w-8" } }} />
+          <UserButton
+            afterSignOutUrl="/"
+            appearance={{
+              variables: {
+                colorBackground: 'hsl(var(--card))',
+                colorText: 'hsl(var(--foreground))',
+                colorTextSecondary: 'hsl(var(--muted-foreground))',
+                colorPrimary: 'hsl(var(--primary))',
+                colorNeutral: 'hsl(var(--muted-foreground))',
+              },
+              elements: {
+                avatarBox: 'h-8 w-8',
+                userButtonPopoverCard: 'shadow-lg border border-border',
+                userButtonPopoverActionButton: 'text-foreground hover:bg-muted/60',
+                userButtonPopoverActionButtonText: 'text-foreground',
+                userButtonPopoverActionButtonIcon: 'text-foreground',
+                userPreviewMainIdentifier: 'text-foreground',
+                userPreviewSecondaryIdentifier: 'text-muted-foreground',
+              },
+            }}
+          />
         </div>
       </div>
 
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-background">
-          <nav className="container mx-auto px-4 py-3 flex flex-col gap-1" aria-label="Mobile navigation">
+          <nav
+            className="container mx-auto px-4 py-3 flex flex-col gap-1"
+            aria-label="Mobile navigation"
+          >
             {navItems.map((item) => {
               const isActive = isNavActive(item.href);
               const Icon = navIconMap[item.href];
               return (
                 <Button
                   key={item.href}
-                  variant={isActive ? "secondary" : "ghost"}
+                  variant={isActive ? 'secondary' : 'ghost'}
                   className="w-full justify-start gap-2 min-h-11"
                   asChild
                 >
