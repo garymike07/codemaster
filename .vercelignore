@@ -1,0 +1,8 @@
+# Vercel deployment ignore
+node_modules
+.convex
+dist
+.git
+.vercel
+*.log
+.husky
